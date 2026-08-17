@@ -1,0 +1,135 @@
+package org.example.incentivebackend.integration;
+
+import org.example.incentivebackend.common.enums.StatusEnum;
+import org.example.incentivebackend.module.auth.dto.LoginRequest;
+import org.example.incentivebackend.module.auth.dto.LoginResponse;
+import org.example.incentivebackend.module.master.businessHead.dto.BusinessHeadRequest;
+import org.example.incentivebackend.module.master.businessHead.dto.BusinessHeadResponse;
+import org.example.incentivebackend.module.master.user.UserEntity;
+import org.example.incentivebackend.module.master.user.UserRepository;
+import org.example.incentivebackend.module.master.user.UserStatus;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+// @ActiveProfiles("test") // Uncomment if there's a test profile for the DB
+class BusinessHeadIntegrationTest {
+
+    @Autowired
+    private TestRestTemplate restTemplate;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    private String jwtToken;
+
+    @BeforeEach
+    void setUp() {
+        // Prepare a user for login
+        if (!userRepository.existsByUsername("integration_admin")) {
+            UserEntity user = new UserEntity();
+            user.setUsername("integration_admin");
+            user.setPassword(passwordEncoder.encode("Password@123"));
+            user.setFullName("Integration Admin");
+            user.setStatus(UserStatus.ACTIVE);
+            userRepository.save(user);
+        }
+
+        // Login to get JWT
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setUsername("integration_admin");
+        loginRequest.setPassword("Password@123");
+
+        ResponseEntity<LoginResponse> response = restTemplate.postForEntity(
+                "/api/auth/login",
+                loginRequest,
+                LoginResponse.class
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        
+        this.jwtToken = response.getBody().getToken();
+    }
+
+    @Test
+    void businessHeadFullLifecycleTest() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(jwtToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // 1. CREATE
+        BusinessHeadRequest createReq = new BusinessHeadRequest();
+        createReq.setHeadName("Integration Test Head");
+        createReq.setHeadShortCode("ITH");
+        createReq.setHeadStatus(StatusEnum.A);
+
+        ResponseEntity<BusinessHeadResponse> createRes = restTemplate.postForEntity(
+                "/api/master/business-heads",
+                new HttpEntity<>(createReq, headers),
+                BusinessHeadResponse.class
+        );
+
+        assertEquals(HttpStatus.CREATED, createRes.getStatusCode());
+        assertNotNull(createRes.getBody());
+        Long createdId = createRes.getBody().getHeadId();
+        assertNotNull(createdId);
+
+        // 2. GET
+        ResponseEntity<BusinessHeadResponse> getRes = restTemplate.exchange(
+                "/api/master/business-heads/" + createdId,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                BusinessHeadResponse.class
+        );
+
+        assertEquals(HttpStatus.OK, getRes.getStatusCode());
+        assertEquals("Integration Test Head", getRes.getBody().getHeadName());
+
+        // 3. UPDATE
+        BusinessHeadRequest updateReq = new BusinessHeadRequest();
+        updateReq.setHeadName("Updated Integration Test Head");
+        updateReq.setHeadShortCode("ITH");
+        
+        ResponseEntity<BusinessHeadResponse> updateRes = restTemplate.exchange(
+                "/api/master/business-heads/" + createdId,
+                HttpMethod.PUT,
+                new HttpEntity<>(updateReq, headers),
+                BusinessHeadResponse.class
+        );
+
+        assertEquals(HttpStatus.OK, updateRes.getStatusCode());
+        assertEquals("Updated Integration Test Head", updateRes.getBody().getHeadName());
+
+        // 4. DELETE
+        ResponseEntity<Void> deleteRes = restTemplate.exchange(
+                "/api/master/business-heads/" + createdId,
+                HttpMethod.DELETE,
+                new HttpEntity<>(headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatus.NO_CONTENT, deleteRes.getStatusCode());
+
+        // 5. GET (Should be 500 or 404 because it's deleted)
+        ResponseEntity<String> getDeletedRes = restTemplate.exchange(
+                "/api/master/business-heads/" + createdId,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                String.class
+        );
+        
+        assertTrue(getDeletedRes.getStatusCode().is5xxServerError() || getDeletedRes.getStatusCode() == HttpStatus.NOT_FOUND);
+    }
+}

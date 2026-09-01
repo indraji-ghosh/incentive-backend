@@ -13,6 +13,8 @@ import org.example.incentivebackend.module.master.site.entity.SiteEntity;
 import org.example.incentivebackend.module.master.site.repository.SiteRepository;
 import org.example.incentivebackend.module.master.unit.entity.UnitEntity;
 import org.example.incentivebackend.module.master.unit.repository.UnitRepository;
+import org.example.incentivebackend.module.master.servicetype.repository.ServiceTypeRepository;
+import org.example.incentivebackend.module.master.servicetype.entity.ServiceTypeEntity;
 import org.example.incentivebackend.module.transaction.partyentry.dto.request.PartyEntryRequest;
 import org.example.incentivebackend.module.transaction.partyentry.dto.request.PartyUnitConfigurationRequest;
 import org.example.incentivebackend.module.transaction.partyentry.dto.response.PartyEntryResponse;
@@ -44,6 +46,7 @@ public class PartyEntryServiceImpl implements PartyEntryService {
     private final ClientRepository clientRepository;
     private final SiteRepository siteRepository;
     private final UnitRepository unitRepository;
+    private final ServiceTypeRepository serviceTypeRepository;
 
     @Override
     public PartyEntryResponse create(PartyEntryRequest request) {
@@ -101,6 +104,17 @@ public class PartyEntryServiceImpl implements PartyEntryService {
         
         // Soft delete or hard delete? Let's hard delete for now per common patterns.
         partyEntryRepository.delete(entity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<org.example.incentivebackend.module.transaction.partyentry.dto.response.PartyLookupResponse> findPartiesByClientId(Long clientId) {
+        return partyEntryRepository.findByClients_ClientId(clientId).stream()
+                .map(entity -> org.example.incentivebackend.module.transaction.partyentry.dto.response.PartyLookupResponse.builder()
+                        .id(entity.getId())
+                        .partyName(entity.getPartyName())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private void mapRelationships(PartyEntryRequest request, PartyEntryEntity entity) {

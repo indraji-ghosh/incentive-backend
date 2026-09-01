@@ -1,0 +1,413 @@
+# Party API Frontend Contracts
+
+## [GET] /api/transaction/party-entries/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "id": integer,
+    "partyName": string,
+    "businessHeadId": integer,
+    "businessHeadName": string,
+    "paymentTypeId": integer,
+    "paymentTypeName": string,
+    "effectiveFrom": string,
+    "effectiveTo": string,
+    "remarks": string,
+    "appStatus": string,
+    "accountHolderName": string,
+    "accountNo": string,
+    "ifscCode": string,
+    "bankName": string,
+    "branchName": string,
+    "clients": [
+      {
+        "id": integer,
+        "name": string,
+      }
+    ],
+    "sites": [
+      {
+        "id": integer,
+        "name": string,
+      }
+    ],
+    "unitConfigurations": [
+      {
+        "id": integer,
+        "unitId": integer,
+        "unitName": string,
+        "rate": number,
+        "effectiveFrom": string,
+        "effectiveTo": string,
+        "notes": string,
+      }
+    ],
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appAt": string,
+    "appBy": integer,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [PUT] /api/transaction/party-entries/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Request Body
+```json
+{
+  "partyName": string,
+  "businessHeadId": integer,
+  "paymentTypeId": integer,
+  "clientIds": [
+    integer
+  ],
+  "siteIds": [
+    integer
+  ],
+  "effectiveFrom": string,
+  "effectiveTo": string,
+  "remarks": string,
+  "accountHolderName": string,
+  "accountNo": string,
+  "ifscCode": string,
+  "bankName": string,
+  "branchName": string,
+  "unitConfigurations": [
+    {
+      "id": integer,
+      "unitId": integer,
+      "rate": number,
+      "effectiveFrom": string,
+      "effectiveTo": string,
+      "notes": string,
+    }
+  ],
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "id": integer,
+    "partyName": string,
+    "businessHeadId": integer,
+    "businessHeadName": string,
+    "paymentTypeId": integer,
+    "paymentTypeName": string,
+    "effectiveFrom": string,
+    "effectiveTo": string,
+    "remarks": string,
+    "appStatus": string,
+    "accountHolderName": string,
+    "accountNo": string,
+    "ifscCode": string,
+    "bankName": string,
+    "branchName": string,
+    "clients": [
+      {
+        "id": integer,
+        "name": string,
+      }
+    ],
+    "sites": [
+      {
+        "id": integer,
+        "name": string,
+      }
+    ],
+    "unitConfigurations": [
+      {
+        "id": integer,
+        "unitId": integer,
+        "unitName": string,
+        "rate": number,
+        "effectiveFrom": string,
+        "effectiveTo": string,
+        "notes": string,
+      }
+    ],
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appAt": string,
+    "appBy": integer,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/transaction/party-entries/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/transaction/party-entries
+**Summary**: N/A
+
+### Parameters
+- **page** (query): integer 
+- **size** (query): integer 
+- **sortBy** (query): string 
+- **sortDirection** (query): string 
+- **search** (query): string 
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "totalPages": integer,
+    "totalElements": integer,
+    "size": integer,
+    "content": [
+      {
+        "id": integer,
+        "partyName": string,
+        "businessHeadId": integer,
+        "businessHeadName": string,
+        "paymentTypeId": integer,
+        "paymentTypeName": string,
+        "effectiveFrom": string,
+        "effectiveTo": string,
+        "remarks": string,
+        "appStatus": string,
+        "accountHolderName": string,
+        "accountNo": string,
+        "ifscCode": string,
+        "bankName": string,
+        "branchName": string,
+        "clients": [
+          {
+            "id": integer,
+            "name": string,
+          }
+        ],
+        "sites": [
+          {
+            "id": integer,
+            "name": string,
+          }
+        ],
+        "unitConfigurations": [
+          {
+            "id": integer,
+            "unitId": integer,
+            "unitName": string,
+            "rate": number,
+            "effectiveFrom": string,
+            "effectiveTo": string,
+            "notes": string,
+          }
+        ],
+        "createdAt": string,
+        "createdBy": integer,
+        "modAt": string,
+        "modBy": integer,
+        "appAt": string,
+        "appBy": integer,
+      }
+    ],
+    "number": integer,
+    "sort": {
+      "empty": boolean,
+      "sorted": boolean,
+      "unsorted": boolean,
+    },
+    "first": boolean,
+    "last": boolean,
+    "numberOfElements": integer,
+    "pageable": {
+      "offset": integer,
+      "sort": {
+        "empty": boolean,
+        "sorted": boolean,
+        "unsorted": boolean,
+      },
+      "paged": boolean,
+      "pageNumber": integer,
+      "pageSize": integer,
+      "unpaged": boolean,
+    },
+    "empty": boolean,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [POST] /api/transaction/party-entries
+**Summary**: N/A
+
+### Request Body
+```json
+{
+  "partyName": string,
+  "businessHeadId": integer,
+  "paymentTypeId": integer,
+  "clientIds": [
+    integer
+  ],
+  "siteIds": [
+    integer
+  ],
+  "effectiveFrom": string,
+  "effectiveTo": string,
+  "remarks": string,
+  "accountHolderName": string,
+  "accountNo": string,
+  "ifscCode": string,
+  "bankName": string,
+  "branchName": string,
+  "unitConfigurations": [
+    {
+      "id": integer,
+      "unitId": integer,
+      "rate": number,
+      "effectiveFrom": string,
+      "effectiveTo": string,
+      "notes": string,
+    }
+  ],
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "id": integer,
+    "partyName": string,
+    "businessHeadId": integer,
+    "businessHeadName": string,
+    "paymentTypeId": integer,
+    "paymentTypeName": string,
+    "effectiveFrom": string,
+    "effectiveTo": string,
+    "remarks": string,
+    "appStatus": string,
+    "accountHolderName": string,
+    "accountNo": string,
+    "ifscCode": string,
+    "bankName": string,
+    "branchName": string,
+    "clients": [
+      {
+        "id": integer,
+        "name": string,
+      }
+    ],
+    "sites": [
+      {
+        "id": integer,
+        "name": string,
+      }
+    ],
+    "unitConfigurations": [
+      {
+        "id": integer,
+        "unitId": integer,
+        "unitName": string,
+        "rate": number,
+        "effectiveFrom": string,
+        "effectiveTo": string,
+        "notes": string,
+      }
+    ],
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appAt": string,
+    "appBy": integer,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/v1/transaction/party-ledger
+**Summary**: N/A
+
+### Parameters
+- **partyId** (query): integer (Required)
+- **clientId** (query): integer 
+- **startDate** (query): string (Required)
+- **endDate** (query): string (Required)
+- **pageNumber** (query): integer 
+- **pageSize** (query): integer 
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "partyId": integer,
+    "clientId": integer,
+    "openingBalance": number,
+    "closingBalance": number,
+    "totalDebit": number,
+    "totalCredit": number,
+    "pageNumber": integer,
+    "pageSize": integer,
+    "totalElements": integer,
+    "totalPages": integer,
+    "entries": [
+      {
+        "referenceId": string,
+        "transactionDate": string,
+        "entryType": string,
+        "debitAmount": number,
+        "creditAmount": number,
+        "balance": number,
+        "remarks": string,
+      }
+    ],
+  },
+  "timestamp": string,
+}
+```
+
+---
+

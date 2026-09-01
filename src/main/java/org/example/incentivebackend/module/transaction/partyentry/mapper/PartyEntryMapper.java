@@ -34,6 +34,8 @@ public interface PartyEntryMapper {
 
     @Mapping(source = "unit.id", target = "unitId")
     @Mapping(source = "unit.name", target = "unitName")
+    @Mapping(source = "serviceType.id", target = "serviceTypeId")
+    @Mapping(source = "serviceType.name", target = "serviceTypeName")
     PartyUnitConfigurationResponse toResponse(PartyUnitConfigurationEntity entity);
 
     @Mapping(source = "clientId", target = "id")

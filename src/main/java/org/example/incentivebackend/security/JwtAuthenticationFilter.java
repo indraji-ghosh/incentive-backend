@@ -34,11 +34,8 @@ public class JwtAuthenticationFilter
         String authHeader =
                 request.getHeader("Authorization");
 
-        System.err.println("Auth header: " + authHeader);
-
         if (authHeader == null ||
                 !authHeader.startsWith("Bearer ")) {
-            System.err.println("No valid auth header, skipping JWT filter");
             filterChain.doFilter(request, response);
             return;
         }

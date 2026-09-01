@@ -1,0 +1,132 @@
+# Association API Frontend Contracts
+
+## [POST] /api/association/client-sites
+**Summary**: N/A
+
+### Request Body
+```json
+{
+  "clientId": integer,
+  "siteIds": [
+    integer
+  ],
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "clientSiteId": integer,
+      "clientId": integer,
+      "clientName": string,
+      "siteId": integer,
+      "siteName": string,
+      "siteShortCode": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/transaction/party-entries/client/{clientId}
+**Summary**: N/A
+
+### Parameters
+- **clientId** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "id": integer,
+      "partyName": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/association/client-sites/site/{siteId}
+**Summary**: N/A
+
+### Parameters
+- **siteId** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "clientSiteId": integer,
+      "clientId": integer,
+      "clientName": string,
+      "siteId": integer,
+      "siteName": string,
+      "siteShortCode": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/association/client-sites/client/{clientId}
+**Summary**: N/A
+
+### Parameters
+- **clientId** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "clientSiteId": integer,
+      "clientId": integer,
+      "clientName": string,
+      "siteId": integer,
+      "siteName": string,
+      "siteShortCode": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/association/client-sites/client/{clientId}/site/{siteId}
+**Summary**: N/A
+
+### Parameters
+- **clientId** (path): integer (Required)
+- **siteId** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+

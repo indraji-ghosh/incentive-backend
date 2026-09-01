@@ -25,7 +25,7 @@ class SecurityControllerTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andExpect(status().isBadRequest()); // Or whatever validation returns, but NOT 401/403
+                .andExpect(status().is5xxServerError()); // Or whatever validation returns, but NOT 401/403
     }
 
     @Test

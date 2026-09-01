@@ -17,6 +17,7 @@ public class PartyUnitConfigurationRequest {
 
     @NotNull(message = "Unit is required")
     private Long unitId;
+    private Long serviceTypeId;
 
     @NotNull(message = "Rate is required")
     @Positive(message = "Rate must be positive")

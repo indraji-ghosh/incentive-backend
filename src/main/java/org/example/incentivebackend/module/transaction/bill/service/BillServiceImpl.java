@@ -308,4 +308,18 @@ public class BillServiceImpl implements BillService {
                 .annexures(rows)
                 .build();
     }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<BillResponse> findAll(String search, org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.jpa.domain.Specification<org.example.incentivebackend.module.transaction.bill.entity.BillEntity> spec = (root, query, cb) -> cb.conjunction();
+        if (search != null && !search.trim().isEmpty()) {
+            String likePattern = "%" + search.trim().toLowerCase() + "%";
+            spec = spec.and((root, query, cb) -> cb.or(
+                    cb.like(cb.lower(root.get("billNumber")), likePattern),
+                    cb.like(cb.lower(root.get("remarks")), likePattern)
+            ));
+        }
+        return billRepository.findAll(spec, pageable).map(this::toResponse);
+    }
 }

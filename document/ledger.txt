@@ -1,0 +1,47 @@
+# Party Ledger API Frontend Contracts
+
+## [GET] /api/v1/transaction/party-ledger
+**Summary**: N/A
+
+### Parameters
+- **partyId** (query): integer (Required)
+- **clientId** (query): integer 
+- **startDate** (query): string (Required)
+- **endDate** (query): string (Required)
+- **pageNumber** (query): integer 
+- **pageSize** (query): integer 
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "partyId": integer,
+    "clientId": integer,
+    "openingBalance": number,
+    "closingBalance": number,
+    "totalDebit": number,
+    "totalCredit": number,
+    "pageNumber": integer,
+    "pageSize": integer,
+    "totalElements": integer,
+    "totalPages": integer,
+    "entries": [
+      {
+        "referenceId": string,
+        "transactionDate": string,
+        "entryType": string,
+        "debitAmount": number,
+        "creditAmount": number,
+        "balance": number,
+        "remarks": string,
+      }
+    ],
+  },
+  "timestamp": string,
+}
+```
+
+---
+

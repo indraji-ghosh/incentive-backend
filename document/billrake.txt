@@ -1,0 +1,288 @@
+# Bill and Rake Entry API Frontend Contracts
+
+## [GET] /api/transaction/rake-entries/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "rakeEntryId": integer,
+    "workingMonth": string,
+    "clientId": integer,
+    "clientName": string,
+    "clientShortCode": string,
+    "partyId": integer,
+    "partyName": string,
+    "remarks": string,
+    "rakeStatus": string,
+    "annexures": [
+      {
+        "rakeAnnexureId": integer,
+        "rrNo": string,
+        "rrDate": string,
+        "challan": string,
+        "loadDate": string,
+        "siding": string,
+        "destination": string,
+        "wagons": integer,
+        "weight": number,
+        "quantity": number,
+        "annexureAmount": number,
+        "notes": string,
+        "status": string,
+      }
+    ],
+    "createdAt": string,
+    "createdBy": string,
+    "modNo": integer,
+    "modBy": string,
+    "modAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [PUT] /api/transaction/rake-entries/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Request Body
+```json
+{
+  "workingMonth": string,
+  "clientId": integer,
+  "partyId": integer,
+  "remarks": string,
+  "annexures": [
+    {
+      "rakeAnnexureId": integer,
+      "rrNo": string,
+      "rrDate": string,
+      "challan": string,
+      "loadDate": string,
+      "siding": string,
+      "destination": string,
+      "wagons": integer,
+      "weight": number,
+      "quantity": number,
+      "annexureAmount": number,
+      "notes": string,
+      "status": string,
+    }
+  ],
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "rakeEntryId": integer,
+    "workingMonth": string,
+    "clientId": integer,
+    "clientName": string,
+    "clientShortCode": string,
+    "partyId": integer,
+    "partyName": string,
+    "remarks": string,
+    "rakeStatus": string,
+    "annexures": [
+      {
+        "rakeAnnexureId": integer,
+        "rrNo": string,
+        "rrDate": string,
+        "challan": string,
+        "loadDate": string,
+        "siding": string,
+        "destination": string,
+        "wagons": integer,
+        "weight": number,
+        "quantity": number,
+        "annexureAmount": number,
+        "notes": string,
+        "status": string,
+      }
+    ],
+    "createdAt": string,
+    "createdBy": string,
+    "modNo": integer,
+    "modBy": string,
+    "modAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/transaction/rake-entries/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/transaction/rake-entries
+**Summary**: N/A
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "rakeEntryId": integer,
+      "workingMonth": string,
+      "clientId": integer,
+      "clientName": string,
+      "clientShortCode": string,
+      "partyId": integer,
+      "partyName": string,
+      "remarks": string,
+      "rakeStatus": string,
+      "annexures": [
+        {
+          "rakeAnnexureId": integer,
+          "rrNo": string,
+          "rrDate": string,
+          "challan": string,
+          "loadDate": string,
+          "siding": string,
+          "destination": string,
+          "wagons": integer,
+          "weight": number,
+          "quantity": number,
+          "annexureAmount": number,
+          "notes": string,
+          "status": string,
+        }
+      ],
+      "createdAt": string,
+      "createdBy": string,
+      "modNo": integer,
+      "modBy": string,
+      "modAt": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [POST] /api/transaction/rake-entries
+**Summary**: N/A
+
+### Request Body
+```json
+{
+  "workingMonth": string,
+  "clientId": integer,
+  "partyId": integer,
+  "remarks": string,
+  "annexures": [
+    {
+      "rakeAnnexureId": integer,
+      "rrNo": string,
+      "rrDate": string,
+      "challan": string,
+      "loadDate": string,
+      "siding": string,
+      "destination": string,
+      "wagons": integer,
+      "weight": number,
+      "quantity": number,
+      "annexureAmount": number,
+      "notes": string,
+      "status": string,
+    }
+  ],
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "rakeEntryId": integer,
+    "workingMonth": string,
+    "clientId": integer,
+    "clientName": string,
+    "clientShortCode": string,
+    "partyId": integer,
+    "partyName": string,
+    "remarks": string,
+    "rakeStatus": string,
+    "annexures": [
+      {
+        "rakeAnnexureId": integer,
+        "rrNo": string,
+        "rrDate": string,
+        "challan": string,
+        "loadDate": string,
+        "siding": string,
+        "destination": string,
+        "wagons": integer,
+        "weight": number,
+        "quantity": number,
+        "annexureAmount": number,
+        "notes": string,
+        "status": string,
+      }
+    ],
+    "createdAt": string,
+    "createdBy": string,
+    "modNo": integer,
+    "modBy": string,
+    "modAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/transaction/rake-entries/hard/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+

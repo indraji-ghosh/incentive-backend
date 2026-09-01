@@ -1,0 +1,1310 @@
+# Master Data API Frontend Contracts
+
+## [GET] /api/master/units/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "id": integer,
+    "code": string,
+    "name": string,
+    "description": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [PUT] /api/master/units/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Request Body
+```json
+{
+  "name": string,
+  "description": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "id": integer,
+    "code": string,
+    "name": string,
+    "description": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/master/units/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/sites/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "siteId": integer,
+    "siteName": string,
+    "siteShortCode": string,
+    "state": string,
+    "siteStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appStatus": string,
+    "appBy": integer,
+    "appAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [PUT] /api/master/sites/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Request Body
+```json
+{
+  "siteName": string,
+  "siteShortCode": string,
+  "state": string,
+  "siteStatus": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "siteId": integer,
+    "siteName": string,
+    "siteShortCode": string,
+    "state": string,
+    "siteStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appStatus": string,
+    "appBy": integer,
+    "appAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/master/sites/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/sectors/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "sectorId": integer,
+    "sectorName": string,
+    "sectorShortCode": string,
+    "sectorStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appStatus": string,
+    "appBy": integer,
+    "appAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [PUT] /api/master/sectors/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Request Body
+```json
+{
+  "sectorName": string,
+  "sectorShortCode": string,
+  "sectorStatus": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "sectorId": integer,
+    "sectorName": string,
+    "sectorShortCode": string,
+    "sectorStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appStatus": string,
+    "appBy": integer,
+    "appAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/master/sectors/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/payment-types/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "id": integer,
+    "code": string,
+    "name": string,
+    "description": string,
+    "appStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appAt": string,
+    "appBy": integer,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [PUT] /api/master/payment-types/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Request Body
+```json
+{
+  "code": string,
+  "name": string,
+  "description": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "id": integer,
+    "code": string,
+    "name": string,
+    "description": string,
+    "appStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appAt": string,
+    "appBy": integer,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/master/payment-types/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/clients/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "clientId": integer,
+    "clientName": string,
+    "clientShortCode": string,
+    "clientStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appStatus": string,
+    "appBy": integer,
+    "appAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [PUT] /api/master/clients/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Request Body
+```json
+{
+  "clientName": string,
+  "clientShortCode": string,
+  "clientStatus": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "clientId": integer,
+    "clientName": string,
+    "clientShortCode": string,
+    "clientStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appStatus": string,
+    "appBy": integer,
+    "appAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/master/clients/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/business-heads/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "headId": integer,
+    "headName": string,
+    "headShortCode": string,
+    "headStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appStatus": string,
+    "appBy": integer,
+    "appAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [PUT] /api/master/business-heads/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Request Body
+```json
+{
+  "headName": string,
+  "headShortCode": string,
+  "headStatus": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "headId": integer,
+  "headName": string,
+  "headShortCode": string,
+  "headStatus": string,
+  "createdAt": string,
+  "createdBy": integer,
+  "modAt": string,
+  "modBy": integer,
+  "appStatus": string,
+  "appBy": integer,
+  "appAt": string,
+}
+```
+
+---
+
+## [DELETE] /api/master/business-heads/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/units
+**Summary**: N/A
+
+### Parameters
+- **page** (query): integer 
+- **size** (query): integer 
+- **sortBy** (query): string 
+- **sortDirection** (query): string 
+- **search** (query): string 
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "totalPages": integer,
+    "totalElements": integer,
+    "size": integer,
+    "content": [
+      {
+        "id": integer,
+        "code": string,
+        "name": string,
+        "description": string,
+      }
+    ],
+    "number": integer,
+    "sort": {
+      "empty": boolean,
+      "sorted": boolean,
+      "unsorted": boolean,
+    },
+    "first": boolean,
+    "last": boolean,
+    "numberOfElements": integer,
+    "pageable": {
+      "offset": integer,
+      "sort": {
+        "empty": boolean,
+        "sorted": boolean,
+        "unsorted": boolean,
+      },
+      "paged": boolean,
+      "pageNumber": integer,
+      "pageSize": integer,
+      "unpaged": boolean,
+    },
+    "empty": boolean,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [POST] /api/master/units
+**Summary**: N/A
+
+### Request Body
+```json
+{
+  "code": string,
+  "name": string,
+  "description": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "id": integer,
+    "code": string,
+    "name": string,
+    "description": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/sites
+**Summary**: N/A
+
+### Parameters
+- **filter** (query): undefined (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "totalPages": integer,
+    "totalElements": integer,
+    "size": integer,
+    "content": [
+      {
+        "siteId": integer,
+        "siteName": string,
+        "siteShortCode": string,
+        "state": string,
+        "siteStatus": string,
+        "createdAt": string,
+        "createdBy": integer,
+        "modAt": string,
+        "modBy": integer,
+        "appStatus": string,
+        "appBy": integer,
+        "appAt": string,
+      }
+    ],
+    "number": integer,
+    "sort": {
+      "empty": boolean,
+      "sorted": boolean,
+      "unsorted": boolean,
+    },
+    "first": boolean,
+    "last": boolean,
+    "numberOfElements": integer,
+    "pageable": {
+      "offset": integer,
+      "sort": {
+        "empty": boolean,
+        "sorted": boolean,
+        "unsorted": boolean,
+      },
+      "paged": boolean,
+      "pageNumber": integer,
+      "pageSize": integer,
+      "unpaged": boolean,
+    },
+    "empty": boolean,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [POST] /api/master/sites
+**Summary**: N/A
+
+### Request Body
+```json
+{
+  "siteName": string,
+  "siteShortCode": string,
+  "state": string,
+  "siteStatus": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "siteId": integer,
+    "siteName": string,
+    "siteShortCode": string,
+    "state": string,
+    "siteStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appStatus": string,
+    "appBy": integer,
+    "appAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/sectors
+**Summary**: N/A
+
+### Parameters
+- **filter** (query): undefined (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "totalPages": integer,
+    "totalElements": integer,
+    "size": integer,
+    "content": [
+      {
+        "sectorId": integer,
+        "sectorName": string,
+        "sectorShortCode": string,
+        "sectorStatus": string,
+        "createdAt": string,
+        "createdBy": integer,
+        "modAt": string,
+        "modBy": integer,
+        "appStatus": string,
+        "appBy": integer,
+        "appAt": string,
+      }
+    ],
+    "number": integer,
+    "sort": {
+      "empty": boolean,
+      "sorted": boolean,
+      "unsorted": boolean,
+    },
+    "first": boolean,
+    "last": boolean,
+    "numberOfElements": integer,
+    "pageable": {
+      "offset": integer,
+      "sort": {
+        "empty": boolean,
+        "sorted": boolean,
+        "unsorted": boolean,
+      },
+      "paged": boolean,
+      "pageNumber": integer,
+      "pageSize": integer,
+      "unpaged": boolean,
+    },
+    "empty": boolean,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [POST] /api/master/sectors
+**Summary**: N/A
+
+### Request Body
+```json
+{
+  "sectorName": string,
+  "sectorShortCode": string,
+  "sectorStatus": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "sectorId": integer,
+    "sectorName": string,
+    "sectorShortCode": string,
+    "sectorStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appStatus": string,
+    "appBy": integer,
+    "appAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/payment-types
+**Summary**: N/A
+
+### Parameters
+- **page** (query): integer 
+- **size** (query): integer 
+- **sortBy** (query): string 
+- **sortDirection** (query): string 
+- **search** (query): string 
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "totalPages": integer,
+    "totalElements": integer,
+    "size": integer,
+    "content": [
+      {
+        "id": integer,
+        "code": string,
+        "name": string,
+        "description": string,
+        "appStatus": string,
+        "createdAt": string,
+        "createdBy": integer,
+        "modAt": string,
+        "modBy": integer,
+        "appAt": string,
+        "appBy": integer,
+      }
+    ],
+    "number": integer,
+    "sort": {
+      "empty": boolean,
+      "sorted": boolean,
+      "unsorted": boolean,
+    },
+    "first": boolean,
+    "last": boolean,
+    "numberOfElements": integer,
+    "pageable": {
+      "offset": integer,
+      "sort": {
+        "empty": boolean,
+        "sorted": boolean,
+        "unsorted": boolean,
+      },
+      "paged": boolean,
+      "pageNumber": integer,
+      "pageSize": integer,
+      "unpaged": boolean,
+    },
+    "empty": boolean,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [POST] /api/master/payment-types
+**Summary**: N/A
+
+### Request Body
+```json
+{
+  "code": string,
+  "name": string,
+  "description": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "id": integer,
+    "code": string,
+    "name": string,
+    "description": string,
+    "appStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appAt": string,
+    "appBy": integer,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/clients
+**Summary**: N/A
+
+### Parameters
+- **filter** (query): undefined (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "totalPages": integer,
+    "totalElements": integer,
+    "size": integer,
+    "content": [
+      {
+        "clientId": integer,
+        "clientName": string,
+        "clientShortCode": string,
+        "clientStatus": string,
+        "createdAt": string,
+        "createdBy": integer,
+        "modAt": string,
+        "modBy": integer,
+        "appStatus": string,
+        "appBy": integer,
+        "appAt": string,
+      }
+    ],
+    "number": integer,
+    "sort": {
+      "empty": boolean,
+      "sorted": boolean,
+      "unsorted": boolean,
+    },
+    "first": boolean,
+    "last": boolean,
+    "numberOfElements": integer,
+    "pageable": {
+      "offset": integer,
+      "sort": {
+        "empty": boolean,
+        "sorted": boolean,
+        "unsorted": boolean,
+      },
+      "paged": boolean,
+      "pageNumber": integer,
+      "pageSize": integer,
+      "unpaged": boolean,
+    },
+    "empty": boolean,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [POST] /api/master/clients
+**Summary**: N/A
+
+### Request Body
+```json
+{
+  "clientName": string,
+  "clientShortCode": string,
+  "clientStatus": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "clientId": integer,
+    "clientName": string,
+    "clientShortCode": string,
+    "clientStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appStatus": string,
+    "appBy": integer,
+    "appAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/business-heads
+**Summary**: N/A
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "headId": integer,
+      "headName": string,
+      "headShortCode": string,
+      "headStatus": string,
+      "createdAt": string,
+      "createdBy": integer,
+      "modAt": string,
+      "modBy": integer,
+      "appStatus": string,
+      "appBy": integer,
+      "appAt": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [POST] /api/master/business-heads
+**Summary**: N/A
+
+### Request Body
+```json
+{
+  "headName": string,
+  "headShortCode": string,
+  "headStatus": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "headId": integer,
+    "headName": string,
+    "headShortCode": string,
+    "headStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+    "appStatus": string,
+    "appBy": integer,
+    "appAt": string,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [POST] /api/association/client-sites
+**Summary**: N/A
+
+### Request Body
+```json
+{
+  "clientId": integer,
+  "siteIds": [
+    integer
+  ],
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "clientSiteId": integer,
+      "clientId": integer,
+      "clientName": string,
+      "siteId": integer,
+      "siteName": string,
+      "siteShortCode": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/units/dropdown
+**Summary**: N/A
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "value": integer,
+      "label": string,
+      "siteType": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/sites/lookup
+**Summary**: N/A
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "value": integer,
+      "label": string,
+      "siteType": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/sectors/lookup
+**Summary**: N/A
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "value": integer,
+      "label": string,
+      "siteType": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/payment-types/dropdown
+**Summary**: N/A
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "value": integer,
+      "label": string,
+      "siteType": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/master/clients/lookup
+**Summary**: N/A
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "value": integer,
+      "label": string,
+      "siteType": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/association/client-sites/site/{siteId}
+**Summary**: N/A
+
+### Parameters
+- **siteId** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "clientSiteId": integer,
+      "clientId": integer,
+      "clientName": string,
+      "siteId": integer,
+      "siteName": string,
+      "siteShortCode": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/association/client-sites/client/{clientId}
+**Summary**: N/A
+
+### Parameters
+- **clientId** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": [
+    {
+      "clientSiteId": integer,
+      "clientId": integer,
+      "clientName": string,
+      "siteId": integer,
+      "siteName": string,
+      "siteShortCode": string,
+    }
+  ],
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/master/sites/hard/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/master/sectors/hard/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/master/clients/hard/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/association/client-sites/client/{clientId}/site/{siteId}
+**Summary**: N/A
+
+### Parameters
+- **clientId** (path): integer (Required)
+- **siteId** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+

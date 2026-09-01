@@ -1,0 +1,184 @@
+# Commission Payment API Frontend Contracts
+
+## [GET] /api/v1/commission-payments
+**Summary**: N/A
+
+### Parameters
+- **page** (query): integer 
+- **size** (query): integer 
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "totalElements": integer,
+    "totalPages": integer,
+    "first": boolean,
+    "last": boolean,
+    "size": integer,
+    "content": [
+      {
+        "id": integer,
+        "partyId": integer,
+        "partyName": string,
+        "paymentAmount": number,
+        "paymentDate": string,
+        "paymentReference": string,
+        "paymentMethod": string,
+        "remarks": string,
+        "paymentStatus": string,
+        "allocations": [
+          {
+            "id": integer,
+            "referenceId": integer,
+            "referenceType": string,
+            "allocatedAmount": number,
+          }
+        ],
+      }
+    ],
+    "number": integer,
+    "sort": {
+      "empty": boolean,
+      "sorted": boolean,
+      "unsorted": boolean,
+    },
+    "pageable": {
+      "offset": integer,
+      "sort": {
+        "empty": boolean,
+        "sorted": boolean,
+        "unsorted": boolean,
+      },
+      "pageSize": integer,
+      "pageNumber": integer,
+      "paged": boolean,
+      "unpaged": boolean,
+    },
+    "numberOfElements": integer,
+    "empty": boolean,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [POST] /api/v1/commission-payments
+**Summary**: N/A
+
+### Request Body
+```json
+{
+  "partyId": integer,
+  "paymentAmount": number,
+  "paymentDate": string,
+  "paymentReference": string,
+  "paymentMethod": string,
+  "remarks": string,
+  "paymentStatus": string,
+  "allocations": [
+    {
+      "referenceId": integer,
+      "referenceType": string,
+      "allocatedAmount": number,
+    }
+  ],
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "id": integer,
+    "partyId": integer,
+    "partyName": string,
+    "paymentAmount": number,
+    "paymentDate": string,
+    "paymentReference": string,
+    "paymentMethod": string,
+    "remarks": string,
+    "paymentStatus": string,
+    "allocations": [
+      {
+        "id": integer,
+        "referenceId": integer,
+        "referenceType": string,
+        "allocatedAmount": number,
+      }
+    ],
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/v1/commission-payments/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "id": integer,
+    "partyId": integer,
+    "partyName": string,
+    "paymentAmount": number,
+    "paymentDate": string,
+    "paymentReference": string,
+    "paymentMethod": string,
+    "remarks": string,
+    "paymentStatus": string,
+    "allocations": [
+      {
+        "id": integer,
+        "referenceId": integer,
+        "referenceType": string,
+        "allocatedAmount": number,
+      }
+    ],
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/v1/commission-payments/available-commission
+**Summary**: N/A
+
+### Parameters
+- **partyId** (query): integer (Required)
+- **referenceId** (query): integer (Required)
+- **referenceType** (query): string (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "partyId": integer,
+    "referenceId": integer,
+    "referenceType": string,
+    "totalAmount": number,
+    "alreadyAllocated": number,
+    "availableAmount": number,
+  },
+  "timestamp": string,
+}
+```
+
+---
+

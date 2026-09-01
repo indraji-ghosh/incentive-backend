@@ -4,6 +4,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.validation.FieldError;
+import java.util.stream.Collectors;
 
 import java.time.LocalDateTime;
 
@@ -14,46 +17,70 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleDuplicateResource(
             DuplicateResourceException ex
     ) {
-
         ErrorResponse response = new ErrorResponse(
                 false,
                 ex.getMessage(),
                 LocalDateTime.now()
         );
-
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(response);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(
             RuntimeException ex
     ) {
-
         ErrorResponse response = new ErrorResponse(
                 false,
                 ex.getMessage(),
                 LocalDateTime.now()
         );
-
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(response);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(
             ResourceNotFoundException ex
     ) {
-
         ErrorResponse response = new ErrorResponse(
                 false,
                 ex.getMessage(),
                 LocalDateTime.now()
         );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
 
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(response);
+    @ExceptionHandler(BusinessValidationException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessValidationException(
+            BusinessValidationException ex
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                false,
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(FieldError::getDefaultMessage)
+                .collect(Collectors.joining(", "));
+        ErrorResponse response = new ErrorResponse(
+                false,
+                message,
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(org.springframework.dao.DataIntegrityViolationException ex) {
+        ErrorResponse response = new ErrorResponse(
+                false,
+                "Data integrity violation: " + ex.getMostSpecificCause().getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 }

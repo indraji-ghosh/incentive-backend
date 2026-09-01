@@ -1,0 +1,196 @@
+# Customer Payment API Frontend Contracts
+
+## [GET] /api/v1/transaction/customer-payment/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "paymentId": integer,
+    "clientId": integer,
+    "paymentAmount": number,
+    "paymentDate": string,
+    "paymentReference": string,
+    "paymentMethod": string,
+    "remarks": string,
+    "paymentStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [PUT] /api/v1/transaction/customer-payment/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Request Body
+```json
+{
+  "clientId": integer,
+  "paymentAmount": number,
+  "paymentDate": string,
+  "paymentReference": string,
+  "paymentMethod": string,
+  "remarks": string,
+  "paymentStatus": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "paymentId": integer,
+    "clientId": integer,
+    "paymentAmount": number,
+    "paymentDate": string,
+    "paymentReference": string,
+    "paymentMethod": string,
+    "remarks": string,
+    "paymentStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [DELETE] /api/v1/transaction/customer-payment/{id}
+**Summary**: N/A
+
+### Parameters
+- **id** (path): integer (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": any,
+  "timestamp": string,
+}
+```
+
+---
+
+## [GET] /api/v1/transaction/customer-payment
+**Summary**: N/A
+
+### Parameters
+- **pageable** (query): undefined (Required)
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "totalElements": integer,
+    "totalPages": integer,
+    "first": boolean,
+    "last": boolean,
+    "size": integer,
+    "content": [
+      {
+        "paymentId": integer,
+        "clientId": integer,
+        "paymentAmount": number,
+        "paymentDate": string,
+        "paymentReference": string,
+        "paymentMethod": string,
+        "remarks": string,
+        "paymentStatus": string,
+        "createdAt": string,
+        "createdBy": integer,
+        "modAt": string,
+        "modBy": integer,
+      }
+    ],
+    "number": integer,
+    "sort": {
+      "empty": boolean,
+      "sorted": boolean,
+      "unsorted": boolean,
+    },
+    "pageable": {
+      "offset": integer,
+      "sort": {
+        "empty": boolean,
+        "sorted": boolean,
+        "unsorted": boolean,
+      },
+      "pageSize": integer,
+      "pageNumber": integer,
+      "paged": boolean,
+      "unpaged": boolean,
+    },
+    "numberOfElements": integer,
+    "empty": boolean,
+  },
+  "timestamp": string,
+}
+```
+
+---
+
+## [POST] /api/v1/transaction/customer-payment
+**Summary**: N/A
+
+### Request Body
+```json
+{
+  "clientId": integer,
+  "paymentAmount": number,
+  "paymentDate": string,
+  "paymentReference": string,
+  "paymentMethod": string,
+  "remarks": string,
+  "paymentStatus": string,
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": {
+    "paymentId": integer,
+    "clientId": integer,
+    "paymentAmount": number,
+    "paymentDate": string,
+    "paymentReference": string,
+    "paymentMethod": string,
+    "remarks": string,
+    "paymentStatus": string,
+    "createdAt": string,
+    "createdBy": integer,
+    "modAt": string,
+    "modBy": integer,
+  },
+  "timestamp": string,
+}
+```
+
+---
+

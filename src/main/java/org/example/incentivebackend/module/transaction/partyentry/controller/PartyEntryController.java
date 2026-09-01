@@ -58,4 +58,10 @@ public class PartyEntryController {
         partyEntryService.delete(id);
         return ResponseBuilder.deleted("Party Entry");
     }
+
+    @GetMapping("/client/{clientId}")
+    public ResponseEntity<ApiResponse<java.util.List<org.example.incentivebackend.module.transaction.partyentry.dto.response.PartyLookupResponse>>> getPartiesByClientId(@PathVariable Long clientId) {
+        java.util.List<org.example.incentivebackend.module.transaction.partyentry.dto.response.PartyLookupResponse> response = partyEntryService.findPartiesByClientId(clientId);
+        return ResponseBuilder.list("Party Lookup", response);
+    }
 }

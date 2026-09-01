@@ -27,3 +27,5 @@ server:
 logging:
   level:
     org.springframework.security: DEBUG
+springdoc:
+  use-fqn: true

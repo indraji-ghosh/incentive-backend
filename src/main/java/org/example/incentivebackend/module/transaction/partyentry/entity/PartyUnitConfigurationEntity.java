@@ -28,6 +28,11 @@ public class PartyUnitConfigurationEntity extends BaseEntity {
     @JoinColumn(name = "unit_id", nullable = false)
     private UnitEntity unit;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_type_id", nullable = true)
+    private org.example.incentivebackend.module.master.servicetype.entity.ServiceTypeEntity serviceType;
+
+
     @Column(name = "rate", nullable = false, precision = 19, scale = 4)
     private BigDecimal rate;
 

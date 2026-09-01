@@ -13,6 +13,8 @@ import java.time.LocalDate;
 public class PartyUnitConfigurationResponse {
     private Long id;
     private Long unitId;
+    private Long serviceTypeId;
+    private String serviceTypeName;
     private String unitName;
     private BigDecimal rate;
     private LocalDate effectiveFrom;

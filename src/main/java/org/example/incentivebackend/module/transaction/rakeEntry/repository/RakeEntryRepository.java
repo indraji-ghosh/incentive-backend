@@ -7,8 +7,10 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
 @Repository
-public interface RakeEntryRepository extends JpaRepository<RakeEntryEntity, Long> {
+public interface RakeEntryRepository extends JpaRepository<RakeEntryEntity, Long>, JpaSpecificationExecutor<RakeEntryEntity> {
     List<RakeEntryEntity> findByClient_ClientId(Long clientId);
 
     List<RakeEntryEntity> findByParty_Id(Long partyId);

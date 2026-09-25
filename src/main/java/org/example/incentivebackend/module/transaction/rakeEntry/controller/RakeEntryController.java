@@ -28,8 +28,13 @@ public class RakeEntryController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<RakeEntryResponse>>> findAll() {
-        List<RakeEntryResponse> response = rakeEntryService.findAll();
+    public ResponseEntity<ApiResponse<List<RakeEntryResponse>>> findAll(
+            @RequestParam(required = false) String rakeNumber,
+            @RequestParam(required = false) Long clientId,
+            @RequestParam(required = false) Long siteId,
+            @RequestParam(required = false) Long serviceId
+    ) {
+        List<RakeEntryResponse> response = rakeEntryService.findAll(rakeNumber, clientId, siteId, serviceId);
         return ResponseBuilder.list("Rake Entries", response);
     }
 

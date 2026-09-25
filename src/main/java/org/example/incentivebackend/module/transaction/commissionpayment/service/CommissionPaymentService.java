@@ -6,6 +6,7 @@ import org.example.incentivebackend.module.transaction.commissionpayment.dto.res
 import org.example.incentivebackend.module.transaction.commissionpayment.dto.response.CommissionPaymentSummaryResponse;
 import org.example.incentivebackend.module.transaction.commissionpayment.dto.response.PartyCommissionPaymentHistoryResponse;
 import org.springframework.data.domain.Page;
+import java.math.BigDecimal;
 
 public interface CommissionPaymentService {
     CommissionPaymentResponse create(CommissionPaymentRequest request);
@@ -14,4 +15,9 @@ public interface CommissionPaymentService {
     PartyCommissionPaymentHistoryResponse getPartyHistory(Long partyId);
     CommissionPaymentResponse update(Long id, CommissionPaymentRequest request);
     void delete(Long id);
+    
+    // New Advance Payment Methods
+    CommissionPaymentResponse createAdvancePayment(CommissionPaymentRequest request);
+    CommissionPaymentResponse adjustAdvance(Long partyId, Long payableId, BigDecimal adjustmentAmount);
+    BigDecimal getAvailableAdvanceBalance(Long partyId);
 }

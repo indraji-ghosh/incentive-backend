@@ -5,6 +5,7 @@ import org.example.incentivebackend.common.enums.StatusEnum;
 import org.example.incentivebackend.common.exception.BusinessValidationException;
 import org.example.incentivebackend.common.exception.ResourceNotFoundException;
 import org.example.incentivebackend.module.transaction.bill.entity.BillEntity;
+import org.example.incentivebackend.module.transaction.bill.enums.BillPaymentStatus;
 import org.example.incentivebackend.module.transaction.bill.repository.BillRepository;
 import org.example.incentivebackend.module.transaction.clientpayment.dto.request.ClientPaymentRequest;
 import org.example.incentivebackend.module.transaction.clientpayment.dto.response.BillPaymentHistoryResponse;
@@ -13,6 +14,7 @@ import org.example.incentivebackend.module.transaction.clientpayment.dto.respons
 import org.example.incentivebackend.module.transaction.clientpayment.entity.ClientPaymentEntity;
 import org.example.incentivebackend.module.transaction.clientpayment.mapper.ClientPaymentMapper;
 import org.example.incentivebackend.module.transaction.clientpayment.repository.ClientPaymentRepository;
+import org.example.incentivebackend.module.transaction.partypayable.service.PartyPayableService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
     private final ClientPaymentRepository clientPaymentRepository;
     private final BillRepository billRepository;
     private final ClientPaymentMapper clientPaymentMapper;
+    private final PartyPayableService partyPayableService;
 
     @Override
     @Transactional
@@ -54,6 +57,8 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
         payment.setPaymentNo(generatePaymentNo());
 
         payment = clientPaymentRepository.save(payment);
+        updateBillPaymentStatus(bill);
+
         return clientPaymentMapper.toResponse(payment);
     }
 
@@ -81,6 +86,8 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
         clientPaymentMapper.updateEntityFromRequest(request, payment);
         
         payment = clientPaymentRepository.save(payment);
+        updateBillPaymentStatus(bill);
+
         return clientPaymentMapper.toResponse(payment);
     }
 
@@ -105,6 +112,9 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with ID: " + id));
         payment.setPaymentStatus(StatusEnum.I);
         clientPaymentRepository.save(payment);
+        if (payment.getBill() != null) {
+            updateBillPaymentStatus(payment.getBill());
+        }
     }
 
     @Override
@@ -119,12 +129,16 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
                 .collect(Collectors.toList());
 
         BigDecimal totalPaid = clientPaymentRepository.getTotalPaidAmountByBillId(billId, StatusEnum.A);
-        BigDecimal outstanding = bill.getBillAmount().subtract(totalPaid);
+        if (totalPaid == null) {
+            totalPaid = BigDecimal.ZERO;
+        }
+        BigDecimal billAmount = bill.getBillAmount() != null ? bill.getBillAmount() : BigDecimal.ZERO;
+        BigDecimal outstanding = billAmount.subtract(totalPaid);
         if (outstanding.compareTo(BigDecimal.ZERO) < 0) {
             outstanding = BigDecimal.ZERO;
         }
 
-        String status = determinePaymentStatus(totalPaid, bill.getBillAmount());
+        String status = determinePaymentStatus(totalPaid, billAmount);
 
         return BillPaymentHistoryResponse.builder()
                 .billId(bill.getBillId())
@@ -146,12 +160,16 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found with ID: " + billId));
 
         BigDecimal totalPaid = clientPaymentRepository.getTotalPaidAmountByBillId(billId, StatusEnum.A);
-        BigDecimal outstanding = bill.getBillAmount().subtract(totalPaid);
+        if (totalPaid == null) {
+            totalPaid = BigDecimal.ZERO;
+        }
+        BigDecimal billAmount = bill.getBillAmount() != null ? bill.getBillAmount() : BigDecimal.ZERO;
+        BigDecimal outstanding = billAmount.subtract(totalPaid);
         if (outstanding.compareTo(BigDecimal.ZERO) < 0) {
             outstanding = BigDecimal.ZERO;
         }
 
-        String status = determinePaymentStatus(totalPaid, bill.getBillAmount());
+        String status = determinePaymentStatus(totalPaid, billAmount);
 
         return BillPaymentSummaryResponse.builder()
                 .billId(bill.getBillId())
@@ -161,6 +179,39 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
                 .outstandingAmount(outstanding)
                 .paymentStatus(status)
                 .build();
+    }
+
+    private void updateBillPaymentStatus(BillEntity bill) {
+        if (bill == null || bill.getBillId() == null) {
+            return;
+        }
+        BigDecimal totalPaid = clientPaymentRepository.getTotalPaidAmountByBillId(bill.getBillId(), StatusEnum.A);
+        if (totalPaid == null) {
+            totalPaid = BigDecimal.ZERO;
+        }
+        BigDecimal billAmount = bill.getBillAmount() != null ? bill.getBillAmount() : BigDecimal.ZERO;
+        BigDecimal outstanding = billAmount.subtract(totalPaid);
+        if (outstanding.compareTo(BigDecimal.ZERO) < 0) {
+            outstanding = BigDecimal.ZERO;
+        }
+
+        bill.setPaidAmount(totalPaid);
+        bill.setOutstandingAmount(outstanding);
+
+        if (totalPaid.compareTo(BigDecimal.ZERO) == 0) {
+            bill.setPaymentStatus(BillPaymentStatus.UNPAID);
+        } else if (totalPaid.compareTo(billAmount) < 0) {
+            bill.setPaymentStatus(BillPaymentStatus.PARTIALLY_PAID);
+        } else {
+            bill.setPaymentStatus(BillPaymentStatus.PAID);
+        }
+        billRepository.save(bill);
+        try {
+            partyPayableService.generatePayablesForBill(bill);
+        } catch (Exception e) {
+            // Log exception but do not fail payment processing
+            System.err.println("Failed to generate party payables for bill: " + bill.getBillId() + " - " + e.getMessage());
+        }
     }
 
     private String determinePaymentStatus(BigDecimal totalPaid, BigDecimal billAmount) {
@@ -174,7 +225,6 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
     }
 
     private String generatePaymentNo() {
-        // Simple generation logic; can be customized based on existing sequence table if available
         long count = clientPaymentRepository.count();
         return String.format("CP-%06d", count + 1);
     }

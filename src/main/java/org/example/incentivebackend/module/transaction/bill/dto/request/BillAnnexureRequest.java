@@ -22,6 +22,7 @@ public class BillAnnexureRequest {
 
     private LocalDate loadDate;
 
+    @NotBlank(message = "Siding is required")
     @Size(max = 150)
     private String siding;
 

@@ -26,7 +26,19 @@ public class BillResponse {
 
     private String partyName;
 
+    private Long siteId;
+
+    private String siteName;
+
+    private String siteShortCode;
+
     private BigDecimal billAmount;
+
+    private String paymentStatus;
+
+    private BigDecimal paidAmount;
+
+    private BigDecimal outstandingAmount;
 
     private String remarks;
 

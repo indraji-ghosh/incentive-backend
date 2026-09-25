@@ -5,8 +5,11 @@ import org.example.incentivebackend.common.exception.ResourceNotFoundException;
 import org.example.incentivebackend.common.enums.StatusEnum;
 import org.example.incentivebackend.module.master.client.entity.ClientEntity;
 import org.example.incentivebackend.module.master.client.repository.ClientRepository;
+import org.example.incentivebackend.module.master.servicetype.repository.ServiceTypeRepository;
+import org.example.incentivebackend.module.master.site.repository.SiteRepository;
 import org.example.incentivebackend.module.transaction.partyentry.entity.PartyEntryEntity;
 import org.example.incentivebackend.module.transaction.partyentry.repository.PartyEntryRepository;
+import org.example.incentivebackend.module.transaction.partypayable.service.PartyPayableService;
 import org.example.incentivebackend.module.transaction.rakeEntry.dto.request.RakeAnnexureRequest;
 import org.example.incentivebackend.module.transaction.rakeEntry.dto.request.RakeEntryRequest;
 import org.example.incentivebackend.module.transaction.rakeEntry.dto.response.RakeEntryResponse;
@@ -16,6 +19,11 @@ import org.example.incentivebackend.module.transaction.rakeEntry.mapper.RakeEntr
 import org.example.incentivebackend.module.transaction.rakeEntry.repository.RakeEntryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
@@ -27,6 +35,9 @@ public class RakeEntryServiceImpl implements RakeEntryService {
     private final RakeEntryRepository rakeEntryRepository;
     private final ClientRepository clientRepository;
     private final PartyEntryRepository partyRepository;
+    private final SiteRepository siteRepository;
+    private final ServiceTypeRepository serviceTypeRepository;
+    private final PartyPayableService partyPayableService;
     private final RakeEntryMapper rakeEntryMapper;
 
     @Override
@@ -34,28 +45,79 @@ public class RakeEntryServiceImpl implements RakeEntryService {
         ClientEntity client = clientRepository.findById(request.getClientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
 
-        PartyEntryEntity party = partyRepository.findById(request.getPartyId())
-                .orElseThrow(() -> new ResourceNotFoundException("Party not found"));
+        PartyEntryEntity party = null;
+        if (request.getPartyId() != null) {
+            party = partyRepository.findById(request.getPartyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Party not found: " + request.getPartyId()));
+        }
 
         RakeEntryEntity rakeEntry = rakeEntryMapper.toEntity(request);
+        if (rakeEntry == null) {
+            rakeEntry = new RakeEntryEntity();
+        }
         rakeEntry.setClient(client);
         rakeEntry.setParty(party);
-        rakeEntry.setRakeStatus(StatusEnum.A); // Assuming default active status
 
-        for (RakeAnnexureRequest annexureReq : request.getAnnexures()) {
-            RakeAnnexureEntity annexure = rakeEntryMapper.toAnnexureEntity(annexureReq);
-            annexure.setRakeEntry(rakeEntry);
-            rakeEntry.getAnnexures().add(annexure);
+        if (request.getRakeNumber() != null && !request.getRakeNumber().isBlank()) {
+            rakeEntry.setRakeNumber(request.getRakeNumber().trim());
+        } else if (request.getAnnexures() != null && !request.getAnnexures().isEmpty()) {
+            rakeEntry.setRakeNumber(request.getAnnexures().get(0).getRrNo());
+        }
+
+        resolveAndSetSite(request, rakeEntry);
+
+        if (request.getServiceIds() != null && !request.getServiceIds().isEmpty()) {
+            rakeEntry.setServices(serviceTypeRepository.findAllById(request.getServiceIds()));
+        }
+
+        rakeEntry.setRakeStatus(StatusEnum.A);
+
+        if (request.getAnnexures() != null) {
+            for (RakeAnnexureRequest annexureReq : request.getAnnexures()) {
+                RakeAnnexureEntity annexure = rakeEntryMapper.toAnnexureEntity(annexureReq);
+                annexure.setRakeEntry(rakeEntry);
+                rakeEntry.getAnnexures().add(annexure);
+            }
         }
 
         RakeEntryEntity saved = rakeEntryRepository.save(rakeEntry);
-        return rakeEntryMapper.toResponse(saved);
+        RakeEntryEntity target = (saved != null) ? saved : rakeEntry;
+
+        // Auto-generate Party Payables for matching client, site, and services
+        partyPayableService.generatePayablesForRake(target);
+
+        return rakeEntryMapper.toResponse(target);
     }
+
+
 
     @Override
     @Transactional(readOnly = true)
-    public List<RakeEntryResponse> findAll() {
-        return rakeEntryMapper.toResponseList(rakeEntryRepository.findAll());
+    public List<RakeEntryResponse> findAll(String rakeNumber, Long clientId, Long siteId, Long serviceId) {
+        Specification<RakeEntryEntity> spec = (root, query, cb) -> {
+            Predicate p = cb.conjunction();
+            
+            // To avoid duplicate rows when joining services
+            if (query != null) {
+                query.distinct(true);
+            }
+            
+            if (rakeNumber != null && !rakeNumber.isBlank()) {
+                p = cb.and(p, cb.like(cb.lower(root.get("rakeNumber")), "%" + rakeNumber.trim().toLowerCase() + "%"));
+            }
+            if (clientId != null) {
+                p = cb.and(p, cb.equal(root.get("client").get("clientId"), clientId));
+            }
+            if (siteId != null) {
+                p = cb.and(p, cb.equal(root.get("site").get("siteId"), siteId));
+            }
+            if (serviceId != null) {
+                Join<RakeEntryEntity, org.example.incentivebackend.module.master.servicetype.entity.ServiceTypeEntity> servicesJoin = root.join("services", JoinType.INNER);
+                p = cb.and(p, cb.equal(servicesJoin.get("id"), serviceId));
+            }
+            return p;
+        };
+        return rakeEntryMapper.toResponseList(rakeEntryRepository.findAll(spec));
     }
 
     @Override
@@ -74,21 +136,55 @@ public class RakeEntryServiceImpl implements RakeEntryService {
         ClientEntity client = clientRepository.findById(request.getClientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
 
-        PartyEntryEntity party = partyRepository.findById(request.getPartyId())
-                .orElseThrow(() -> new ResourceNotFoundException("Party not found"));
-
         rakeEntryMapper.updateEntityFromRequest(request, rakeEntry);
         rakeEntry.setClient(client);
-        rakeEntry.setParty(party);
 
-        rakeEntry.getAnnexures().clear();
-        for (RakeAnnexureRequest annexureReq : request.getAnnexures()) {
-            RakeAnnexureEntity annexure = rakeEntryMapper.toAnnexureEntity(annexureReq);
-            annexure.setRakeEntry(rakeEntry);
-            rakeEntry.getAnnexures().add(annexure);
+        if (request.getPartyId() != null) {
+            PartyEntryEntity party = partyRepository.findById(request.getPartyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Party not found: " + request.getPartyId()));
+            rakeEntry.setParty(party);
+        } else {
+            rakeEntry.setParty(null);
         }
 
-        return rakeEntryMapper.toResponse(rakeEntry);
+        if (request.getRakeNumber() != null && !request.getRakeNumber().isBlank()) {
+            rakeEntry.setRakeNumber(request.getRakeNumber().trim());
+        }
+
+        resolveAndSetSite(request, rakeEntry);
+
+        if (request.getServiceIds() != null) {
+            rakeEntry.setServices(serviceTypeRepository.findAllById(request.getServiceIds()));
+        }
+
+        rakeEntry.getAnnexures().clear();
+        if (request.getAnnexures() != null) {
+            for (RakeAnnexureRequest annexureReq : request.getAnnexures()) {
+                RakeAnnexureEntity annexure = rakeEntryMapper.toAnnexureEntity(annexureReq);
+                annexure.setRakeEntry(rakeEntry);
+                rakeEntry.getAnnexures().add(annexure);
+            }
+        }
+
+        RakeEntryEntity updated = rakeEntryRepository.save(rakeEntry);
+        RakeEntryEntity target = (updated != null) ? updated : rakeEntry;
+
+        partyPayableService.generatePayablesForRake(target);
+
+        return rakeEntryMapper.toResponse(target);
+    }
+
+    private void resolveAndSetSite(RakeEntryRequest request, RakeEntryEntity rakeEntry) {
+        if (request.getSiteId() != null) {
+            siteRepository.findById(request.getSiteId()).ifPresent(rakeEntry::setSite);
+        } else if (request.getAnnexures() != null && !request.getAnnexures().isEmpty()) {
+            String siding = request.getAnnexures().get(0).getSiding();
+            if (siding != null && !siding.isBlank()) {
+                siteRepository.findBySiteNameIgnoreCase(siding.trim())
+                        .or(() -> siteRepository.findBySiteShortCodeIgnoreCase(siding.trim()))
+                        .ifPresent(rakeEntry::setSite);
+            }
+        }
     }
 
     @Override

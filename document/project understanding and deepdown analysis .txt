@@ -1,0 +1,776 @@
+====================================================================================================
+                        INCENTIVE ERP — COMPLETE SYSTEM ARCHITECTURE,
+                    BUSINESS DOMAIN FLOW & TECHNICAL DEEP DIVE ANALYSIS
+====================================================================================================
+Document Version : 2.0.0
+Classification   : Confidential — Internal Engineering & Business Documentation
+Target Audience  : Software Engineers, Architects, Business Analysts, Product Managers, QA Engineers
+Project Name     : Incentive ERP (Logistics, Rake Handling, Party Incentive & Financial Settlement System)
+Location         : incentive-backend/document/project understanding and deepdown analysis .txt
+Last Updated     : September 2026
+
+====================================================================================================
+TABLE OF CONTENTS
+====================================================================================================
+1. EXECUTIVE SUMMARY & SYSTEM OBJECTIVES
+2. BUSINESS DOMAIN & INDUSTRY CONTEXT
+   2.1. Railway Freight, Siding Management & Rake Operations
+   2.2. The Business Problem Solved by Incentive ERP
+   2.3. Core Domain Actors & Stakeholders
+3. HIGH-LEVEL ARCHITECTURE & TECHNOLOGY STACK
+   3.1. Technical Stack Breakdown (Backend, Frontend, Database, Dev Tools)
+   3.2. Layered Architecture Pattern (Spring Boot Standard)
+   3.3. Client-Side Architecture (React + Vite + AG Grid + Zustand)
+4. COMPLETE END-TO-END BUSINESS & TECHNICAL WORKFLOW
+   4.1. Step 1: Foundational Master Configuration
+   4.2. Step 2: Contract Matrix (Client-Site Association & Party Assignment)
+   4.3. Step 3: Ground Operations (Rake Entry & Annexure Management)
+   4.4. Step 4: Client Invoicing (Bill Entry & Annexures)
+   4.5. Step 5: Automated Party Payable Calculation Engine (The Core Brain)
+   4.6. Step 6: Client Inward Payment & Settlement (Customer Payment)
+   4.7. Step 7: Vendor/Party Disbursement (Commission/Party Payment)
+   4.8. Step 8: Financial Reconciliation (Party Ledger & Running Balance)
+5. TECHNICAL DEEP DIVE BY MODULE
+   5.1. Master Data Module
+   5.2. Association & Rate Contract Module (Party Assignment)
+   5.3. Rake Operations Module
+   5.4. Client Invoicing Module (Bill Entry)
+   5.5. Automated Party Payable Engine (Party Payable Module)
+   5.6. Client Payment Module
+   5.7. Party Disbursement Module (Commission Payment)
+   5.8. Financial Ledger Module (Party Ledger)
+6. AUTOMATION ENGINES & CALCULATION LOGIC
+   6.1. Rake-Based Automation (Wagon-based, Rake-based, MT-based)
+   6.2. Bill-Based Automation (Bill-booking vs Bill-payment triggers)
+   6.3. Monthly Fixed Retainer Engine
+7. SECURITY, AUTHENTICATION & SESSION MANAGEMENT
+   7.1. Stateless JWT Security Model
+   7.2. Token Lifecycle & Expiration Detection (Client & Server)
+   7.3. Cross-Site Request & Exception Handling
+8. DATABASE SCHEMA, RELATIONSHIPS & DATA INTEGRITY
+   8.1. Entity Relationship (ER) Conceptual Diagram
+   8.2. Table DDL, Foreign Keys, Sequences & Constraints
+   8.3. Audit Trails & Modification Tracking
+9. FRONTEND INTEGRATION & UI/UX ARCHITECTURE
+   9.1. AG Grid Design System & Multi-line Rendering
+   9.2. Reactive State Management (Zustand & TanStack Query)
+   9.3. Form Validation, Zod Schemas & Error Handling
+10. EDGE CASES, GOTCHAS & PRODUCTION RUNBOOK
+    10.1. Common Pitfalls & How They Are Mitigated
+    10.2. Production Checklist & Maintenance Procedures
+
+
+====================================================================================================
+1. EXECUTIVE SUMMARY & SYSTEM OBJECTIVES
+====================================================================================================
+Incentive ERP is an enterprise-grade logistics and incentive settlement system specifically 
+engineered for industrial freight operators, railway siding managers, and cargo handling enterprises.
+
+In bulk cargo transportation (such as cement, coal, steel, clinker, fertilizers, and minerals), 
+goods are transported across countrywide railway networks in freight trains called "Rakes".
+Managing these rakes at railway sidings involves heavy on-ground operations executed by specialized 
+contractors, transport gangs, and vendors (known in this ERP as "Parties").
+
+Before Incentive ERP:
+- Rake entries, wagon counts, challans, and weights were maintained in manual paper logbooks or spreadsheets.
+- Billing clients (e.g., UltraTech Cement, Adani Cement, JSW) was disconnected from contractor payouts.
+- Calculating what each party (vendor) was owed required days of error-prone manual calculations 
+  based on different rate structures (per wagon, per rake, per metric ton, fixed monthly, or bill percentages).
+- Cash flows suffered from uncollected client receivables while contractors demanded prompt payments.
+- Financial ledgers had discrepancies between operational bookings and actual disbursements.
+
+Incentive ERP automates this entire lifecycle:
+1. Captures Rake and Invoicing data in a structured, audited format.
+2. Automates rate contract binding between Clients, Sidings, Parties, and Services.
+3. Automatically computes Party Payables the instant a Rake is booked, a Bill is raised, or a Client pays.
+4. Manages the complete vendor payment voucher workflow with real-time outstanding tracking.
+5. Maintains a double-entry Party Ledger with chronological running balance calculations.
+
+
+====================================================================================================
+2. BUSINESS DOMAIN & INDUSTRY CONTEXT
+====================================================================================================
+
+2.1. Railway Freight, Siding Management & Rake Operations
+----------------------------------------------------------
+To understand Incentive ERP, one must understand the domain terminology:
+- Rake (Freight Train): A convoy of railway wagons (typically 40 to 60 wagons per train) carrying bulk 
+  industrial cargo (typically 2,500 to 4,000 Metric Tons).
+- Siding: A railway track section connected to a main line, located inside or adjacent to a private factory, 
+  port, or distribution hub (e.g., Asansol Siding, Durgapur Siding, Haldia Dock).
+- RR No (Railway Receipt Number): A legally binding railway transport document issued by Indian Railways 
+  acting as proof of cargo booking, freight charges, and consignment ownership.
+- Challan: Delivery notes accompanying cargo dispatch from siding to final destination by trucks.
+- Rake Covering / Tarping: A critical specialized manual service where contractors wrap wagons with 
+  heavy-duty tarpaulins to protect water-sensitive bulk goods (cement, clinker, food grains) from rain and wind.
+- Siding Handling / Unloading: Physical decanting, crane operation, bag stacking, or forklift handling.
+
+2.2. The Business Problem Solved by Incentive ERP
+--------------------------------------------------
+Each client (e.g., Adani Cement) contracts a logistics company to manage their rakes at specific sidings.
+The logistics company subcontracts specific activities to local specialized Parties (vendors):
+- Vendor A does "Rake Covering" at ₹35 per wagon.
+- Vendor B provides "Siding Supervision" at a flat ₹2,000 per rake.
+- Vendor C handles "Bagging & Shifting" at ₹15 per Metric Ton.
+- Vendor D provides 24/7 security on a fixed ₹25,000 per month contract.
+- Vendor E receives 2% commission on the net client bill upon payment.
+
+Incentive ERP solves the complex multi-variable calculation:
+`(Party + Client + Site + Service + Payment Basis + Operational Qty) -> Automated Payable -> Ledger Credit -> Payment Voucher -> Ledger Debit`
+
+2.3. Core Domain Actors & Stakeholders
+--------------------------------------
+1. Client (Customer):
+   The industrial corporate paying the freight invoices (e.g., Adani Cement, UltraTech, Tata Steel).
+2. Site (Terminal / Siding):
+   The geographic railway siding where physical operations take place.
+3. Party (Vendor / Subcontractor):
+   The ground vendor performing the work who earns commission / payables from the company.
+4. Business Head:
+   Internal company executive who manages a cluster of client relationships and approves party contracts.
+5. Operator / Data Entry Clerk:
+   Enters daily rake arrival details, RR numbers, wagon counts, and client bills.
+6. Accountant / Finance Manager:
+   Authorizes party vouchers, reviews party financial ledgers, and reconciles payments against bank records.
+7. System Administrator:
+   Configures roles, service masters, system users, and rate structures.
+
+
+====================================================================================================
+3. HIGH-LEVEL ARCHITECTURE & TECHNOLOGY STACK
+====================================================================================================
+
+3.1. Technical Stack Breakdown
+------------------------------
+- Backend Framework: Spring Boot 3.4.1 (Java 21 LTS)
+- Persistence Layer: Spring Data JPA, Hibernate 6, Jakarta Persistence API
+- Database: Oracle Database (Local Express / Standard Edition, schema APP_USER)
+- Security: Spring Security 6, JJWT (io.jsonwebtoken: 0.12.6) Stateless Bearer Authentication
+- DTO Mapping: MapStruct 1.6.3 & Project Lombok
+- API Documentation: SpringDoc OpenAPI 3.0 / Swagger UI
+- Frontend Framework: React 18.3, TypeScript 5.5, Vite 5.4
+- Component Library: Radix UI primitives, Lucide React icons, Tailwind CSS 3.4
+- Data Grid: AG Grid Community 32 with custom Quartz/Nimbus design system theme
+- State Management: Zustand 5.0 with localStorage persistence middleware
+- Data Fetching & Caching: TanStack React Query 5.102
+- Form Handling & Validation: React Hook Form 7.52 + Zod 3.23
+
+3.2. Layered Architecture Pattern (Spring Boot Standard)
+--------------------------------------------------------
+The backend enforces a clean 5-tier architecture:
+1. Controller Layer (`module.*.controller`):
+   REST endpoints exposing standard JSON payloads wrapped in `ApiResponse<T>`. Responsible solely for 
+   HTTP status codes, parameter extraction, and authorization annotations.
+2. Service Interface & Implementation Layer (`module.*.service` / `impl`):
+   Contains all business logic, transactions (`@Transactional`), validation, automated payable generation, 
+   and ledger posting.
+3. Repository Layer (`module.*.repository`):
+   Extends `JpaRepository<Entity, ID>` with custom JPQL and native SQL queries for efficient data retrieval.
+4. Entity Layer (`module.*.entity`):
+   JPA `@Entity` classes mapped to Oracle tables, managing foreign keys, cascades, and sequence generators.
+5. DTO Layer (`module.*.dto` / `request` / `response`):
+   Decouples internal database schemas from external API contracts. Uses MapStruct for fast compile-time conversion.
+
+3.3. Client-Side Architecture (React + Vite + AG Grid + Zustand)
+----------------------------------------------------------------
+The frontend is built as a single-page application (SPA):
+1. Routes (`routes/AppRouter.tsx` & `ProtectedRoute.tsx`):
+   Client-side routing protected by real-time JWT validity and role guards.
+2. Global Auth Store (`store/useAuthStore.ts`):
+   Persists JWT token, user roles, and permissions in `localStorage` with automatic rehydration purging.
+3. Central API Client (`lib/api.ts`):
+   Axios instance with request interceptors (pre-flight token expiry check) and response interceptors 
+   (handling 401 & 403 unauthenticated auto-logout).
+4. Reusable Grid (`components/common/DataTable.tsx`):
+   AG Grid wrapper styled with Nimbus design tokens, supporting custom heights, multi-line stacked cell 
+   renderers, and pagination.
+
+
+====================================================================================================
+4. COMPLETE END-TO-END BUSINESS & TECHNICAL WORKFLOW
+====================================================================================================
+
+The entire ERP operates along an interconnected 8-step pipeline:
+
+ [1. Master Config] ──> [2. Party Assignment] ──> [3. Rake Entry] ──> [4. Bill Entry]
+                                                           │                  │
+                                                           ▼                  ▼
+                                                  [5. AUTO PARTY PAYABLE ENGINE]
+                                                               │
+                                                               ▼
+ [6. Client Payment] ──> [7. Party Payment Voucher] ──> [8. Party Financial Ledger]
+
+----------------------------------------------------------------------------------------------------
+4.1. Step 1: Foundational Master Configuration
+----------------------------------------------------------------------------------------------------
+Business Meaning:
+Before any trains roll in or cargo is moved, the enterprise must define its operational universe:
+- Which clients do we serve? (Client Master)
+- Which railway sidings do we manage? (Site Master)
+- Which services do we provide? (Service Type Master: Rake Covering, Siding Handling, Bagging, etc.)
+- How are rates calculated? (Payment Type Master: PER_WAGON, PER_RAKE, PER_MT, MONTHLY_FIXED, BILL_BASED)
+- Who are our subcontractors? (Party Master: Vendor Name, Bank Account, IFSC, Branch, Contact)
+- Who are our internal account executives? (Business Head Master)
+
+Technical Implementation:
+- Tables: `MS_CLIENT`, `MS_SITE`, `MS_SERVICE_TYPE`, `MS_PAYMENT_TYPE`, `MS_PARTY`, `MS_BUSINESS_HEAD`.
+- Endpoints: Standard CRUD at `/api/master/*`.
+- Soft Deletes & Auditing: Records maintain status flags (`STATUS = 'A'`) and tracking columns 
+  (`CREATED_AT`, `CREATED_BY`, `MOD_AT`, `MOD_BY`).
+
+----------------------------------------------------------------------------------------------------
+4.2. Step 2: Contract Matrix (Client-Site Association & Party Assignment)
+----------------------------------------------------------------------------------------------------
+Business Meaning:
+A client (e.g. UltraTech) only operates at specific sidings (e.g. Durgapur Siding).
+Furthermore, different parties do different jobs at different rates for different clients.
+Example:
+- Party "Maa Tara Services" is assigned to "UltraTech Cement" at "Durgapur Siding".
+- Configured Service: "Rake Covering" at ₹40 per wagon.
+- Configured Service: "Siding Supervision" at ₹1,500 per rake.
+
+Technical Implementation:
+- Association Table 1: `TX_CLIENT_SITE` (binds `CLIENT_ID` to `SITE_ID`).
+- Association Table 2: `TX_PARTY_ASSIGNMENT` (binds `PARTY_ID` + `CLIENT_ID` + `SITE_ID` + `EFFECTIVE_FROM`).
+- Child Table: `TX_PARTY_ASSIGNMENT_CONFIG` (stores individual rate rows: `SERVICE_TYPE_ID`, `PAYMENT_TYPE_ID`, `RATE`).
+- Endpoints: `/api/association/party-assignments`.
+- Compact Tabular Frontend: A streamlined interface allows defining client-site binding and adding 
+  multiple service rate configurations in one submission.
+
+----------------------------------------------------------------------------------------------------
+4.3. Step 3: Ground Operations (Rake Entry & Annexure Management)
+----------------------------------------------------------------------------------------------------
+Business Meaning:
+A freight rake arrives at a siding. The siding supervisor records:
+- Client Name & Siding.
+- Working Month (e.g. "2026-09").
+- Individual wagon consignments (Annexures): RR Number, RR Date, Challan No, Load Date, 
+  Wagon Count (e.g. 58 wagons), Weight in MT (e.g. 3,850.50 MT), and Annexure Amount.
+- Remarks and operational notes.
+
+Technical Implementation:
+- Parent Table: `TX_RAKE_ENTRY` (`RAKE_ENTRY_ID`, `CLIENT_ID`, `SITE_ID`, `WORKING_MONTH`, `STATUS`).
+- Child Table: `TX_RAKE_ANNEXURE` (`RAKE_ANNEXURE_ID`, `RAKE_ENTRY_ID`, `RR_NO`, `WAGONS`, `WEIGHT`, `AMOUNT`).
+- Controller: `RakeEntryController` (`POST /api/transaction/rake-entries`).
+- When saved, the Rake is initially in `SUBMITTED` or `APPROVED` status.
+
+----------------------------------------------------------------------------------------------------
+4.4. Step 4: Client Invoicing (Bill Entry & Annexures)
+----------------------------------------------------------------------------------------------------
+Business Meaning:
+The billing department prepares the official invoice issued to the client for the services delivered:
+- Bill Number (e.g., "INV-2026-0042"), Bill Date, Due Date.
+- Client, Siding, Working Month.
+- Bill Amount, Tax/GST, Net Total.
+- Status: Starts as `UNPAID`.
+
+Technical Implementation:
+- Table: `TX_BILL_ENTRY` (`BILL_ENTRY_ID`, `BILL_NO`, `CLIENT_ID`, `SITE_ID`, `TOTAL_AMOUNT`, `BILL_STATUS`).
+- Table: `TX_BILL_ANNEXURE` (Itemized service billing breakdown).
+- Controller: `BillEntryController` (`POST /api/transaction/bill-entries`).
+
+----------------------------------------------------------------------------------------------------
+4.5. Step 5: Automated Party Payable Calculation Engine (The Core Brain)
+----------------------------------------------------------------------------------------------------
+Business Meaning:
+This is the central automated value engine of Incentive ERP.
+Contractors do NOT manually raise invoices. The system automatically calculates their payable earnings:
+Case A — Rake Arrival Trigger:
+  When a Rake Entry is saved/approved:
+  The engine looks up all Party Assignments matching that `CLIENT_ID` and `SITE_ID`.
+  For each assignment configuration where payment basis is:
+  - `PER_WAGON` or `WAGON_BASED`: `Payable = Total Wagons * Rate`
+  - `PER_RAKE` or `RAKE_BASED`: `Payable = 1 Rake * Rate`
+  - `PER_MT`: `Payable = Total Metric Tons * Rate`
+  The engine inserts an unbilled `PartyPayable` record with `SOURCE_TYPE = 'RAKE'`!
+
+Case B — Bill Booking Trigger:
+  When a Client Bill is booked:
+  The engine looks up Party Assignments configured with `BILL_BASED` or `FIXED` per bill.
+  Automatically inserts a `PartyPayable` record with `SOURCE_TYPE = 'BILL'`!
+
+Case C — Monthly Retainer Trigger:
+  On the 1st of every month, a scheduled job scans active Party Assignments with `MONTHLY_FIXED`.
+  Automatically inserts a `PartyPayable` record with `SOURCE_TYPE = 'MONTHLY_FIXED'`!
+
+Technical Implementation:
+- Table: `TX_PARTY_PAYABLE`:
+  Columns: `PAYABLE_ID`, `PARTY_ID`, `CLIENT_ID`, `SITE_ID`, `SERVICE_TYPE_ID`, `SOURCE_TYPE`, 
+  `SOURCE_ID`, `SOURCE_REFERENCE`, `QUANTITY`, `RATE`, `PAYABLE_AMOUNT`, `STATUS`, `TRANSACTION_DATE`.
+- Service: `PartyPayableServiceImpl.java`:
+  Method `generatePayablesForRake(RakeEntryEntity rake)`
+  Method `generatePayablesForBill(BillEntryEntity bill)`
+  Method `generateMonthlyFixedPayables(LocalDate monthDate)`
+- Real-time Ledger Posting: The moment a payable is created, it automatically generates a CREDIT (+) 
+  entry in `TX_PARTY_LEDGER` for that party!
+
+----------------------------------------------------------------------------------------------------
+4.6. Step 6: Client Inward Payment & Settlement (Customer Payment)
+----------------------------------------------------------------------------------------------------
+Business Meaning:
+The client deposits payment into our company bank account for an outstanding Bill:
+- Payment Amount, Payment Date, Payment Mode (NEFT, RTGS, Cheque).
+- Linked Bill Number.
+- If the payment amount matches the bill, the Bill status becomes `PAID`.
+- If partial, the Bill status becomes `PARTIALLY_PAID`.
+- If any Party Assignment was configured with `BILL_PAYMENT` (payable triggered only upon realized payment), 
+  the receipt of this client payment triggers the generation of that party's payable!
+
+Technical Implementation:
+- Table: `TX_CLIENT_PAYMENT` (`PAYMENT_ID`, `CLIENT_ID`, `BILL_ID`, `PAYMENT_AMOUNT`, `PAYMENT_DATE`, `STATUS`).
+- Service: `ClientPaymentServiceImpl.java`:
+  Updates `BillEntryEntity.billStatus` to `PAID` or `PARTIALLY_PAID`.
+  Invokes `partyPayableService.generatePayablesForBill(bill)` to release realized commissions.
+
+----------------------------------------------------------------------------------------------------
+4.7. Step 7: Vendor/Party Disbursement (Commission/Party Payment)
+----------------------------------------------------------------------------------------------------
+Business Meaning:
+Now the company pays the Party (vendor) for their accumulated payables:
+- The finance manager opens the "Party Payment" screen.
+- Selects the Party (e.g. "Maa Tara Services").
+- The screen shows:
+  - Total Earned (Sum of all approved payables): e.g. ₹85,000.
+  - Total Paid to date: e.g. ₹50,000.
+  - Outstanding Due: ₹35,000.
+- The manager creates a Payment Voucher for ₹30,000 via Bank Transfer (NEFT) with UTR Reference.
+- System validates: Disbursed amount CANNOT exceed outstanding due!
+
+Technical Implementation:
+- Table: `TX_COMMISSION_PAYMENT` (`ID`, `PARTY_ID`, `PAYMENT_AMOUNT`, `PAYMENT_DATE`, `PAYMENT_REFERENCE`, `PAYMENT_METHOD`).
+- Service: `CommissionPaymentServiceImpl.java`:
+  Validates `paymentAmount <= outstandingCommission`.
+  Inserts payment record.
+  Posts an immediate DEBIT (-) entry to `TX_PARTY_LEDGER`!
+  Updates running summaries.
+
+----------------------------------------------------------------------------------------------------
+4.8. Step 8: Financial Reconciliation (Party Ledger & Running Balance)
+----------------------------------------------------------------------------------------------------
+Business Meaning:
+The Party Ledger is the definitive statement of accounts between the company and each subcontractor:
+- Chronological statement showing every single transaction.
+- When an operation occurs (Rake/Bill): CREDIT (+₹2,000). Balance increases to ₹2,000.
+- Another Rake arrives: CREDIT (+₹2,200). Balance increases to ₹4,200.
+- Company disburses payment: DEBIT (-₹3,000). Balance decreases to ₹1,200.
+- The closing balance matches the party's live outstanding liability.
+- Both parties can inspect, audit, and print this statement.
+
+Technical Implementation:
+- Table: `TX_PARTY_LEDGER`:
+  Columns: `LEDGER_ID`, `PARTY_ID`, `TRANSACTION_DATE`, `REFERENCE_NO`, `DESCRIPTION`, 
+  `DEBIT`, `CREDIT`, `BALANCE`, `ENTRY_TYPE`, `CREATED_AT`.
+- Service: `PartyLedgerServiceImpl.java`:
+  Calculates running balance on the fly using window sorting:
+  `balance = previousBalance + credit - debit`.
+- Endpoint: `GET /api/transaction/party-ledger?partyId=1&startDate=...&endDate=...`.
+
+
+====================================================================================================
+5. TECHNICAL DEEP DIVE BY MODULE
+====================================================================================================
+
+5.1. Master Data Module
+-----------------------
+Package: `org.example.incentivebackend.module.master`
+Subpackages: `client`, `site`, `party`, `servicetype`, `paymenttype`, `businessHead`, `user`, `designation`.
+
+Key Entities:
+- `ClientEntity.java` (`MS_CLIENT`): `clientId`, `clientName`, `clientShortCode`, `status`.
+- `SiteEntity.java` (`MS_SITE`): `siteId`, `siteName`, `siteShortCode`, `location`, `status`.
+- `PartyEntity.java` (`MS_PARTY`): `partyId`, `partyName`, `bankName`, `accountNo`, `ifscCode`, `branchName`, `status`.
+  *Note: GST and PAN fields were removed per business requirement to simplify contractor onboarding.*
+- `ServiceTypeEntity.java` (`MS_SERVICE_TYPE`): `serviceTypeId`, `serviceName`, `serviceCode`, `description`.
+- `PaymentTypeEntity.java` (`MS_PAYMENT_TYPE`): `paymentTypeId`, `typeName`, `typeCode`.
+  Standard Codes: `PER_WAGON`, `PER_RAKE`, `PER_MT`, `MONTHLY_FIXED`, `BILL_BASED`.
+
+5.2. Association & Rate Contract Module (Party Assignment)
+----------------------------------------------------------
+Package: `org.example.incentivebackend.module.association`
+Subpackages: `clientSite`, `partyassignment`.
+
+Key Entities:
+- `ClientSiteEntity.java` (`TX_CLIENT_SITE`):
+  Links a `ClientEntity` to a `SiteEntity`. Prevents selecting an invalid siding for a client during data entry.
+- `PartyAssignmentEntity.java` (`TX_PARTY_ASSIGNMENT`):
+  `id`: Primary Key.
+  `party`: ManyToOne to `PartyEntity`.
+  `client`: ManyToOne to `ClientEntity`.
+  `site`: ManyToOne to `SiteEntity`.
+  `effectiveFrom`, `effectiveTo`: Contract validity date window.
+  `status`: 'A' (Active) or 'I' (Inactive).
+- `PartyAssignmentConfigEntity.java` (`TX_PARTY_ASSIGNMENT_CONFIG`):
+  `id`: Primary Key.
+  `partyAssignment`: ManyToOne back-reference.
+  `serviceType`: ManyToOne to `ServiceTypeEntity`.
+  `paymentType`: ManyToOne to `PaymentTypeEntity`.
+  `rate`: Numeric unit rate (e.g. 40.00).
+
+5.3. Rake Operations Module
+----------------------------
+Package: `org.example.incentivebackend.module.transaction.rakeEntry`
+
+Key Entities & Workflow:
+- `RakeEntryEntity.java` (`TX_RAKE_ENTRY`):
+  `rakeEntryId`, `workingMonth`, `client`, `site`, `remarks`, `rakeStatus` (`APPROVED`, `SUBMITTED`, `DRAFT`).
+  OneToMany relationship to `RakeAnnexureEntity`.
+- `RakeAnnexureEntity.java` (`TX_RAKE_ANNEXURE`):
+  `rakeAnnexureId`, `rrNo`, `rrDate`, `challan`, `loadDate`, `siding`, `destination`, 
+  `wagons` (Integer), `weight` (Double), `quantity` (Double), `annexureAmount` (Double).
+- Trigger Point in `RakeEntryServiceImpl.java`:
+  When a rake entry is created or updated:
+  ```java
+  RakeEntryEntity savedRake = rakeEntryRepository.save(rake);
+  partyPayableService.generatePayablesForRake(savedRake);
+  ```
+
+5.4. Client Invoicing Module (Bill Entry)
+-----------------------------------------
+Package: `org.example.incentivebackend.module.transaction.bill`
+
+Key Entities & Workflow:
+- `BillEntryEntity.java` (`TX_BILL_ENTRY`):
+  `billEntryId`, `billNo`, `billDate`, `workingMonth`, `client`, `site`, 
+  `totalAmount`, `billStatus` (`UNPAID`, `PARTIALLY_PAID`, `PAID`).
+  OneToMany relationship to `BillAnnexureEntity`.
+- Trigger Point in `BillEntryServiceImpl.java`:
+  ```java
+  BillEntryEntity savedBill = billEntryRepository.save(bill);
+  partyPayableService.generatePayablesForBill(savedBill);
+  ```
+
+5.5. Automated Party Payable Engine (Party Payable Module)
+----------------------------------------------------------
+Package: `org.example.incentivebackend.module.transaction.partypayable`
+
+Key Entity:
+- `PartyPayableEntity.java` (`TX_PARTY_PAYABLE`):
+  - `id`: Unique Payable ID.
+  - `partyId`, `partyName`.
+  - `clientId`, `clientName`.
+  - `siteId`, `siteName`.
+  - `serviceTypeId`, `serviceName`.
+  - `sourceType`: String enum (`RAKE`, `BILL`, `MONTHLY_FIXED`).
+  - `sourceId`: Foreign ID of the originating Rake, Bill, or Schedule.
+  - `sourceReference`: Human-readable identifier (e.g. Rake Challan / Bill No `INV-1024`).
+  - `calculationBasis`: Description of formula applied (e.g. `58 Wagons @ ₹40.00`).
+  - `quantity`: Operational metric used (Wagons count, MT weight, or 1.0).
+  - `rate`: Contracted rate applied.
+  - `payableAmount`: Final calculated money owed to the party.
+  - `transactionDate`: Date of operational occurrence.
+  - `status`: 'A' (Active).
+
+Service Logic in `PartyPayableServiceImpl.java`:
+- Idempotency & Duplicate Prevention:
+  Before generating a payable, the engine queries existing records by `sourceType`, `sourceId`, and `partyId`.
+  If a payable already exists for that operational event, it updates the calculation rather than duplicating.
+- Automatic Ledger Sync:
+  Every newly generated payable instantly calls:
+  `partyLedgerService.postCreditEntry(partyId, referenceNo, description, payableAmount, transactionDate)`.
+
+5.6. Client Payment Module
+--------------------------
+Package: `org.example.incentivebackend.module.transaction.clientpayment`
+
+Key Entity:
+- `ClientPaymentEntity.java` (`TX_CLIENT_PAYMENT`):
+  `paymentId`, `client`, `bill`, `paymentAmount`, `paymentDate`, `paymentReference`, `paymentMethod`, `paymentStatus`.
+Service Logic in `ClientPaymentServiceImpl.java`:
+- Validates the payment amount against the Bill's outstanding balance.
+- Updates `BillEntryEntity.billStatus`.
+- Calls `partyPayableService.generatePayablesForBill(bill)` so payment-contingent commissions trigger automatically.
+
+5.7. Party Disbursement Module (Commission Payment)
+---------------------------------------------------
+Package: `org.example.incentivebackend.module.transaction.commissionpayment`
+
+Key Entity:
+- `CommissionPaymentEntity.java` (`TX_COMMISSION_PAYMENT`):
+  `id`, `party` (ManyToOne to `PartyEntity`), `paymentAmount`, `paymentDate`, `paymentReference`, 
+  `paymentMethod`, `remarks`, `paymentStatus`.
+Summary Projection:
+- `CommissionPaymentSummaryResponse`:
+  Calculates live totals per party:
+  - `totalCommissionEarned`: SUM of all active `PartyPayable` amounts for this party.
+  - `totalCommissionPaid`: SUM of all `CommissionPayment` amounts disbursed to this party.
+  - `outstandingCommission`: `totalCommissionEarned - totalCommissionPaid`.
+- Financial Guardrail:
+  A payment voucher CANNOT be saved if `paymentAmount > outstandingCommission`.
+- Automatic Ledger Sync:
+  Every payment voucher posted automatically invokes:
+  `partyLedgerService.postDebitEntry(partyId, paymentReference, "Disbursement: " + remarks, paymentAmount, paymentDate)`.
+
+5.8. Financial Ledger Module (Party Ledger)
+-------------------------------------------
+Package: `org.example.incentivebackend.module.transaction.partyLedger`
+
+Key Entity:
+- `PartyLedgerEntity.java` (`TX_PARTY_LEDGER`):
+  `ledgerId`, `partyId`, `transactionDate`, `referenceNo`, `description`, 
+  `debit` (disbursements), `credit` (payable earnings), `balance` (running balance), `entryType`.
+Service Logic:
+- Provides a chronological ledger statement between two dates.
+- Opening Balance is computed as all historical credits minus historical debits prior to `startDate`.
+- Each transaction in the period computes `runningBalance = previousBalance + credit - debit`.
+- Closing Balance is verified against current live outstanding commission.
+
+
+====================================================================================================
+6. AUTOMATION ENGINES & CALCULATION LOGIC
+====================================================================================================
+
+6.1. Rake-Based Automation (Wagon-based, Rake-based, MT-based)
+--------------------------------------------------------------
+Trigger: Rake saved or approved in `TX_RAKE_ENTRY`.
+Algorithm:
+```
+1. Fetch all PartyAssignment where clientId = rake.clientId, siteId = rake.siteId, status = 'A'.
+2. For each assignment:
+   For each config in assignment.configs:
+     rate = config.rate
+     basis = config.paymentType.typeCode
+     
+     if basis in ['PER_WAGON', 'WAGON_BASED']:
+       qty = sum of wagons in rake.annexures (or 1 if annexures empty)
+       payableAmount = qty * rate
+       formula = qty + " Wagons @ ₹" + rate
+       
+     else if basis in ['PER_RAKE', 'RAKE_BASED']:
+       qty = 1.0
+       payableAmount = 1.0 * rate
+       formula = "1 Rake Flat @ ₹" + rate
+       
+     else if basis in ['PER_MT', 'WEIGHT_BASED']:
+       qty = sum of weight in rake.annexures
+       payableAmount = qty * rate
+       formula = qty + " MT @ ₹" + rate
+       
+     Save PartyPayable(sourceType='RAKE', sourceId=rake.id, amount=payableAmount)
+     Post to PartyLedger(Credit = payableAmount)
+```
+
+6.2. Bill-Based Automation (Bill-booking vs Bill-payment triggers)
+-----------------------------------------------------------------
+Trigger: Bill saved in `TX_BILL_ENTRY` or Client Payment saved in `TX_CLIENT_PAYMENT`.
+Algorithm:
+```
+1. Fetch all PartyAssignment where clientId = bill.clientId, siteId = bill.siteId, status = 'A'.
+2. For each assignment:
+   For each config where basis in ['BILL', 'BILL_BASED', 'BILL_PAYMENT', 'FIXED']:
+     rate = config.rate
+     
+     if basis is percentage:
+       payableAmount = (bill.totalAmount * rate) / 100.0
+       formula = rate + "% of Bill Amount ₹" + bill.totalAmount
+     else:
+       payableAmount = rate
+       formula = "Fixed Bill Commission @ ₹" + rate
+       
+     Save PartyPayable(sourceType='BILL', sourceId=bill.id, amount=payableAmount)
+     Post to PartyLedger(Credit = payableAmount)
+```
+
+6.3. Monthly Fixed Retainer Engine
+----------------------------------
+Trigger: Scheduled Cron on the 1st of every calendar month (or manual execution via admin API).
+Algorithm:
+```
+1. Fetch all active PartyAssignmentConfig where paymentType = 'MONTHLY_FIXED'.
+2. For each config:
+   party = config.partyAssignment.party
+   rate = config.rate
+   Save PartyPayable(
+     sourceType='MONTHLY_FIXED', 
+     sourceReference='FIXED-' + yyyyMM, 
+     amount=rate, 
+     calculationBasis='Monthly Retainer Contract'
+   )
+   Post to PartyLedger(Credit = rate)
+```
+
+
+====================================================================================================
+7. SECURITY, AUTHENTICATION & SESSION MANAGEMENT
+====================================================================================================
+
+7.1. Stateless JWT Security Model
+---------------------------------
+- No server-side HTTP sessions (`SessionCreationPolicy.STATELESS`).
+- Login via `/api/auth/login` accepts `username` and `password` (BCrypt encoded).
+- On success, returns signed JWT token with standard claims (`sub`, `userId`, `username`, `roles`, `exp`).
+- Default Token Validity: 24 Hours (`expiration: 86400000 ms`).
+- Every incoming HTTP request passes through `JwtAuthenticationFilter`:
+  Extracts `Authorization: Bearer <token>`.
+  Validates signature and expiry using HMAC-SHA256.
+  Loads `UserDetails` into `SecurityContextHolder.getContext().setAuthentication(...)`.
+
+7.2. Token Lifecycle & Expiration Detection (Client & Server)
+-------------------------------------------------------------
+A recurring issue in enterprise SPAs is silent token expiration where the UI still appears "logged in" 
+while background API calls fail with unauthenticated errors.
+
+Incentive ERP implements a 5-layer proactive token expiration defense:
+1. Client-Side JWT Payload Inspector (`lib/auth-utils.ts -> isTokenExpired()`):
+   Decodes the Base64 JWT payload and parses the numeric `exp` claim against `Date.now()`.
+   Includes a 15-second safety skew to prevent in-flight boundary race conditions.
+2. Zustand Store Rehydration Guard (`store/useAuthStore.ts -> onRehydrateStorage()`):
+   When a user opens the application or refreshes a browser tab, Zustand inspects the token in `localStorage`.
+   If expired, it immediately wipes credentials, ensuring the app NEVER renders in a fake logged-in state.
+3. Proactive Request Interceptor (`lib/api.ts -> request.use()`):
+   Before any network packet leaves the browser, Axios checks `isTokenExpired(token)`.
+   If expired, it cancels the call immediately, cleans local storage, and redirects to `/login?expired=true`.
+4. Response Interceptor for 401 & 403 (`lib/api.ts -> response.use()`):
+   Spring Security returns HTTP 403 Forbidden when authentication fails.
+   The interceptor handles both 401 and 403, immediately purging auth state and redirecting to login.
+5. Reactive Background Session Watcher (`App.tsx -> <SessionWatcher />`):
+   Listens to window `focus`, document `visibilitychange`, and runs a 30-second heartbeat check.
+   If the user switches back to an idle tab after hours, it instantly redirects to the login screen with 
+   a clear notification banner: "Session Expired: Please sign in again to continue."
+
+7.3. Cross-Site Request & Exception Handling
+--------------------------------------------
+- CORS: Configured in `SecurityConfig.java` to allow local and staging frontend origins with credentials.
+- CSRF: Disabled because state is completely stateless and tokens are stored in auth headers.
+- Global Error Handler (`GlobalExceptionHandler.java`):
+  Intercepts `MethodArgumentNotValidException`, `ResourceNotFoundException`, `DataIntegrityViolationException`, 
+  and wraps errors in uniform `ApiResponse.error(...)` format.
+
+
+====================================================================================================
+8. DATABASE SCHEMA, RELATIONSHIPS & DATA INTEGRITY
+====================================================================================================
+
+8.1. Entity Relationship (ER) Conceptual Diagram
+------------------------------------------------
+```
+[MS_CLIENT] 1 ──── N [TX_CLIENT_SITE] N ──── 1 [MS_SITE]
+     │                                             │
+     │ 1                                           │ 1
+     │                                             │
+     ▼ N                                           ▼ N
+[TX_PARTY_ASSIGNMENT] 1 ──── N [TX_PARTY_ASSIGNMENT_CONFIG]
+     ▲ 1                                           │
+     │                                             │
+[MS_PARTY] 1 ──┐                                   │
+     │         │                                   │
+     │ 1       │                                   ▼
+     │         │                            [TX_PARTY_PAYABLE] ◄─── [TX_RAKE_ENTRY]
+     │         │                                   │                      │
+     │         ▼ N                                 │                      ▼
+     │   [TX_COMMISSION_PAYMENT]                   │              [TX_RAKE_ANNEXURE]
+     │         │                                   ▼
+     ▼ N       ▼                           [TX_PARTY_LEDGER]   ◄─── [TX_BILL_ENTRY]
+[TX_PARTY_LEDGER] ─────────────────────────────────┘                      │
+                                                                          ▼
+                                                                 [TX_CLIENT_PAYMENT]
+```
+
+8.2. Table DDL, Foreign Keys, Sequences & Constraints
+-----------------------------------------------------
+1. `MS_CLIENT`: `CLIENT_ID` (PK, Sequence), `CLIENT_NAME`, `CLIENT_SHORT_CODE`, `STATUS`.
+2. `MS_SITE`: `SITE_ID` (PK, Sequence), `SITE_NAME`, `SITE_SHORT_CODE`, `LOCATION`, `STATUS`.
+3. `MS_PARTY`: `PARTY_ID` (PK, Sequence), `PARTY_NAME`, `BANK_NAME`, `ACCOUNT_NO`, `IFSC_CODE`, `BRANCH_NAME`.
+4. `TX_CLIENT_SITE`: `CLIENT_SITE_ID` (PK), `CLIENT_ID` (FK to `MS_CLIENT`), `SITE_ID` (FK to `MS_SITE`).
+   Unique Constraint on (`CLIENT_ID`, `SITE_ID`).
+5. `TX_PARTY_ASSIGNMENT`: `ID` (PK), `PARTY_ID` (FK), `CLIENT_ID` (FK), `SITE_ID` (FK), `EFFECTIVE_FROM`.
+6. `TX_PARTY_ASSIGNMENT_CONFIG`: `ID` (PK), `ASSIGNMENT_ID` (FK), `SERVICE_TYPE_ID` (FK), `PAYMENT_TYPE_ID` (FK), `RATE`.
+7. `TX_RAKE_ENTRY`: `RAKE_ENTRY_ID` (PK), `CLIENT_ID` (FK), `SITE_ID` (FK), `WORKING_MONTH`, `STATUS`.
+8. `TX_RAKE_ANNEXURE`: `RAKE_ANNEXURE_ID` (PK), `RAKE_ENTRY_ID` (FK), `RR_NO`, `WAGONS`, `WEIGHT`, `AMOUNT`.
+9. `TX_BILL_ENTRY`: `BILL_ENTRY_ID` (PK), `BILL_NO` (Unique), `CLIENT_ID` (FK), `SITE_ID` (FK), `TOTAL_AMOUNT`.
+10. `TX_PARTY_PAYABLE`: `ID` (PK), `PARTY_ID` (FK), `CLIENT_ID` (FK), `SITE_ID` (FK), `SOURCE_TYPE`, `PAYABLE_AMOUNT`.
+11. `TX_COMMISSION_PAYMENT`: `ID` (PK), `PARTY_ID` (FK), `PAYMENT_AMOUNT`, `PAYMENT_DATE`, `PAYMENT_REFERENCE`.
+12. `TX_PARTY_LEDGER`: `LEDGER_ID` (PK), `PARTY_ID` (FK), `TRANSACTION_DATE`, `DEBIT`, `CREDIT`, `BALANCE`.
+
+8.3. Audit Trails & Modification Tracking
+-----------------------------------------
+Every transaction table incorporates audit fields:
+- `CREATED_AT`: Timestamp of record creation.
+- `CREATED_BY`: User ID who created the record.
+- `MOD_AT`: Timestamp of last modification.
+- `MOD_BY`: User ID who modified the record.
+- `MOD_NO`: Monotonically increasing revision counter for optimistic locking.
+
+
+====================================================================================================
+9. FRONTEND INTEGRATION & UI/UX ARCHITECTURE
+====================================================================================================
+
+9.1. AG Grid Design System & Multi-line Rendering
+-------------------------------------------------
+In operational ERPs, dense tables often require displaying stacked contextual data:
+- Party Column: Displays Party Name stacked above `ID: #12`.
+- Client/Site Column: Displays Building Icon + Client Name stacked above MapPin + Site Name.
+- Source Column: Displays Badge (`RAKE` / `BILL`) stacked above Reference No and Calculation Basis.
+
+To prevent clipping and vertical misalignment:
+1. `index.css`: AG Grid Nimbus theme overrides set `--ag-row-height: 58px` and `--ag-header-height: 46px`.
+2. `.ag-cell`: Configured with `display: flex !important; align-items: center; line-height: normal !important;`.
+   This eliminates baseline-shift bugs where stacked text containers were pushed outside table borders.
+3. `<DataTable>`: Supports custom `rowHeight={64}` for tables with multi-line badges (like `PartyPayableList.tsx` 
+   and `PartyAssignmentPage.tsx`).
+
+9.2. Reactive State Management (Zustand & TanStack Query)
+---------------------------------------------------------
+- Server Cache Invalidation:
+  When an action occurs (e.g. recording a party payment), TanStack Query invalidates related keys:
+  ```ts
+  queryClient.invalidateQueries({ queryKey: ["partyPaymentSummaries"] });
+  queryClient.invalidateQueries({ queryKey: ["partyPayables"] });
+  queryClient.invalidateQueries({ queryKey: ["partyLedger"] });
+  ```
+  This guarantees that all summary cards, grids, and ledger balances across different tabs remain 100% in sync 
+  without requiring a full browser page refresh.
+
+9.3. Form Validation, Zod Schemas & Error Handling
+--------------------------------------------------
+- Forms are powered by React Hook Form paired with Zod schemas (`@hookform/resolvers/zod`).
+- Validates data types, required fields, date ranges, and positive numeric amounts before hitting network endpoints.
+- Backend validation errors (`400 Bad Request`) are caught by Axios and displayed in accessible toast notifications.
+
+
+====================================================================================================
+10. EDGE CASES, GOTCHAS & PRODUCTION RUNBOOK
+====================================================================================================
+
+10.1. Common Pitfalls & How They Are Mitigated
+----------------------------------------------
+1. Oracle NULL Constraint Violations:
+   *Problem*: Early versions had `PARTY_ID NOT NULL` on `TX_RAKE_ENTRY`, causing ORA-01400 when creating rakes 
+   without hardcoded party inputs.
+   *Resolution*: Rakes and Bills are client/siding operational documents, not party documents. Parties are bound 
+   via `TX_PARTY_ASSIGNMENT`. The foreign key on `TX_RAKE_ENTRY` was relaxed, and the automated payable engine 
+   resolves parties dynamically.
+2. Silent JWT Expiration:
+   *Problem*: Browser kept `isAuthenticated: true` in localStorage for days; background API calls failed with 403.
+   *Resolution*: Active Session Watcher, request-time token expiry checks, and rehydration guards automatically 
+   wipe expired sessions and redirect to `/login?expired=true`.
+3. Table Text Clipping:
+   *Problem*: AG Grid default 48px row height with inline-block cells clipped the upper half of two-line texts.
+   *Resolution*: Increased default row height to 58px-64px, added flex alignment to `.ag-cell`, and reset line-height.
+4. Overpayment to Parties:
+   *Problem*: Disbursing more money than a vendor is owed creates a negative balance.
+   *Resolution*: Frontend form and backend service validate `paymentAmount <= outstandingCommission`.
+5. Missing Site in Client Dropdowns:
+   *Problem*: Siding dropdown displaying sites unrelated to the selected client.
+   *Resolution*: Siding dropdown is strictly filtered by `/api/association/client-sites/client/{clientId}`.
+
+10.2. Production Checklist & Maintenance Procedures
+---------------------------------------------------
+1. Starting Backend Service:
+   Command: `java -jar target/incentive-backend-0.0.1-SNAPSHOT.jar`
+   Port: `8080` (Check log at `application.log` or console).
+   Verify Health: `curl http://localhost:8080/api/auth/login` (Expect 400 Bad Request, confirming active endpoint).
+2. Starting Frontend Service:
+   Command: `npm run dev` (Port `5173`)
+   Build Validation: `npm run build` (`tsc && vite build`).
+3. Database Verification:
+   Oracle Database listener running on port `1521`, service name `orclpdb`, schema `app_user`.
+4. Automated Payable Backfill:
+   If a historical Rake or Bill was created prior to party assignment configuration, trigger manual calculation 
+   via:
+   - `POST /api/transaction/party-payables/generate/rake/{rakeId}`
+   - `POST /api/transaction/party-payables/generate/bill/{billId}`
+
+====================================================================================================
+                                      END OF DOCUMENTATION
+====================================================================================================

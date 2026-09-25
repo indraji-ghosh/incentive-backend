@@ -13,4 +13,7 @@ public class PartyCommissionPaymentHistoryResponse {
     private BigDecimal outstandingCommission;
     private String paymentStatus;
     private List<CommissionPaymentResponse> payments;
+    private BigDecimal totalAdvance;
+    private BigDecimal totalAdvanceAdjusted;
+    private BigDecimal availableAdvance;
 }

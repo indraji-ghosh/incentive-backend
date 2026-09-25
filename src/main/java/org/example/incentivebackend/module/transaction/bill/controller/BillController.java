@@ -32,10 +32,12 @@ public class BillController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "billId") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDirection,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String billNumber,
+            @RequestParam(required = false) Long clientId,
+            @RequestParam(required = false) Long siteId) {
         
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
-        Page<BillResponse> response = billService.findAll(search, PageRequest.of(page, size, sort));
+        Page<BillResponse> response = billService.findAll(billNumber, clientId, siteId, PageRequest.of(page, size, sort));
         return ResponseBuilder.list("Bill Entry", response);
     }
 

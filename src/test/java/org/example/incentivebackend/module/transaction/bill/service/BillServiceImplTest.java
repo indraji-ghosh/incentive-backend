@@ -38,6 +38,9 @@ class BillServiceImplTest {
     @Mock
     private PartyEntryRepository partyRepository;
 
+    @Mock
+    private org.example.incentivebackend.module.transaction.partypayable.service.PartyPayableService partyPayableService;
+
     @InjectMocks
     private BillServiceImpl billService;
 

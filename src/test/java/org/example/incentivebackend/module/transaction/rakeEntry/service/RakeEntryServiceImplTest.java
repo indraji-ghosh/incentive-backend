@@ -41,7 +41,13 @@ class RakeEntryServiceImplTest {
     private PartyEntryRepository partyRepository;
 
     @Mock
+    private org.example.incentivebackend.module.master.site.repository.SiteRepository siteRepository;
+
+    @Mock
     private RakeEntryMapper rakeEntryMapper;
+
+    @Mock
+    private org.example.incentivebackend.module.transaction.partypayable.service.PartyPayableService partyPayableService;
 
     @InjectMocks
     private RakeEntryServiceImpl rakeEntryService;

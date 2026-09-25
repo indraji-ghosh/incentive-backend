@@ -13,14 +13,19 @@ import java.util.List;
 @Setter
 public class RakeEntryRequest {
 
+    private String rakeNumber;
+
     @NotNull(message = "Working month is required")
     private LocalDate workingMonth;
 
     @NotNull(message = "Client is required")
     private Long clientId;
 
-    @NotNull(message = "Party is required")
     private Long partyId;
+
+    private Long siteId;
+
+    private List<Long> serviceIds;
 
     private String remarks;
 

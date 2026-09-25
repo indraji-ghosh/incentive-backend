@@ -17,5 +17,5 @@ public interface BillService {
 
     void delete(Long id);
 
-    org.springframework.data.domain.Page<BillResponse> findAll(String search, org.springframework.data.domain.Pageable pageable);
+    org.springframework.data.domain.Page<BillResponse> findAll(String billNumber, Long clientId, Long siteId, org.springframework.data.domain.Pageable pageable);
 }

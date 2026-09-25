@@ -17,4 +17,6 @@ public class CommissionPaymentResponse {
     private String status;
     private LocalDateTime createdAt;
     private Long createdBy;
+    private String paymentType;
+    private BigDecimal adjustedAmount;
 }

@@ -11,4 +11,7 @@ public class CommissionPaymentSummaryResponse {
     private BigDecimal totalCommissionPaid;
     private BigDecimal outstandingCommission;
     private String paymentStatus;
+    private BigDecimal totalAdvance;
+    private BigDecimal totalAdvanceAdjusted;
+    private BigDecimal availableAdvance;
 }

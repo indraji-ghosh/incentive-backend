@@ -6,7 +6,7 @@ import lombok.Setter;
 import org.example.incentivebackend.common.audit.anotation.Auditable;
 import org.example.incentivebackend.common.audit.enums.AuditModule;
 import org.example.incentivebackend.common.entity.BaseEntity;
-import org.example.incentivebackend.module.transaction.partyentry.entity.PartyEntryEntity;
+import org.example.incentivebackend.module.master.party.entity.PartyEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -28,7 +28,7 @@ public class CommissionPaymentEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "party_id", nullable = false)
-    private PartyEntryEntity party;
+    private PartyEntity party;
 
     @Column(name = "payment_date", nullable = false)
     private LocalDate paymentDate;
@@ -41,4 +41,10 @@ public class CommissionPaymentEntity extends BaseEntity {
 
     @Column(name = "status", length = 20)
     private String status;
+
+    @Column(name = "payment_type", length = 30)
+    private String paymentType = "PAYABLE_PAYMENT";
+
+    @Column(name = "adjusted_amount", precision = 19, scale = 2)
+    private BigDecimal adjustedAmount = BigDecimal.ZERO;
 }

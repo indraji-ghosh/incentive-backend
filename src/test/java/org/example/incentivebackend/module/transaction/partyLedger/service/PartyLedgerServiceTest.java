@@ -7,8 +7,8 @@ import org.example.incentivebackend.module.transaction.commissionpayment.service
 import org.example.incentivebackend.module.transaction.partyLedger.dto.request.PartyLedgerFilter;
 import org.example.incentivebackend.module.transaction.partyLedger.dto.response.PartyLedgerResponse;
 import org.example.incentivebackend.module.transaction.partyLedger.dto.response.PartyLedgerSummaryResponse;
-import org.example.incentivebackend.module.transaction.partyentry.entity.PartyEntryEntity;
-import org.example.incentivebackend.module.transaction.partyentry.repository.PartyEntryRepository;
+import org.example.incentivebackend.module.master.party.entity.PartyEntity;
+import org.example.incentivebackend.module.master.party.repository.PartyRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 class PartyLedgerServiceTest {
 
     @Mock
-    private PartyEntryRepository partyEntryRepository;
+    private PartyRepository partyRepository;
 
     @Mock
     private CommissionPaymentRepository commissionPaymentRepository;
@@ -37,16 +37,24 @@ class PartyLedgerServiceTest {
     @Mock
     private CommissionCalculationService commissionCalculationService;
 
+    @Mock
+    private org.example.incentivebackend.module.transaction.partypayable.repository.PartyPayableRepository partyPayableRepository;
+
+    @Mock
+    private org.example.incentivebackend.module.transaction.commissionpayment.repository.PartyPaymentAdjustmentRepository partyPaymentAdjustmentRepository;
+
     @InjectMocks
     private PartyLedgerService partyLedgerService;
 
-    private PartyEntryEntity party;
+    private PartyEntity party;
     private PartyLedgerFilter defaultFilter;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        party = new PartyEntryEntity();
+        when(partyPayableRepository.findByParty_IdAndStatus(any(), any())).thenReturn(Collections.emptyList());
+        when(partyPaymentAdjustmentRepository.findByAdvancePayment_Party_Id(any())).thenReturn(Collections.emptyList());
+        party = new PartyEntity();
         party.setId(1L);
         party.setPartyName("Test Party");
         party.setCreatedAt(LocalDateTime.of(2026, 8, 1, 10, 0));
@@ -58,7 +66,7 @@ class PartyLedgerServiceTest {
 
     @Test
     void testPartyLedgerWithNoCommission() {
-        when(partyEntryRepository.findById(1L)).thenReturn(Optional.of(party));
+        when(partyRepository.findById(1L)).thenReturn(Optional.of(party));
         when(commissionCalculationService.getTotalCommissionEarned(1L)).thenReturn(BigDecimal.ZERO);
         when(commissionPaymentRepository.findByParty_IdAndStatusOrderByPaymentDateDescCommissionPaymentIdDesc(1L, "ACTIVE")).thenReturn(Collections.emptyList());
 
@@ -72,7 +80,7 @@ class PartyLedgerServiceTest {
 
     @Test
     void testPartyWithCommissionEarnedAndNoPayments() {
-        when(partyEntryRepository.findById(1L)).thenReturn(Optional.of(party));
+        when(partyRepository.findById(1L)).thenReturn(Optional.of(party));
         when(commissionCalculationService.getTotalCommissionEarned(1L)).thenReturn(new BigDecimal("100000.00"));
         when(commissionPaymentRepository.findByParty_IdAndStatusOrderByPaymentDateDescCommissionPaymentIdDesc(1L, "ACTIVE")).thenReturn(Collections.emptyList());
 
@@ -86,7 +94,7 @@ class PartyLedgerServiceTest {
 
     @Test
     void testPartyWithOneCommissionPayment() {
-        when(partyEntryRepository.findById(1L)).thenReturn(Optional.of(party));
+        when(partyRepository.findById(1L)).thenReturn(Optional.of(party));
         when(commissionCalculationService.getTotalCommissionEarned(1L)).thenReturn(new BigDecimal("100000.00"));
 
         CommissionPaymentEntity cp1 = new CommissionPaymentEntity();
@@ -108,7 +116,7 @@ class PartyLedgerServiceTest {
 
     @Test
     void testRunningBalanceAndOrdering() {
-        when(partyEntryRepository.findById(1L)).thenReturn(Optional.of(party));
+        when(partyRepository.findById(1L)).thenReturn(Optional.of(party));
         when(commissionCalculationService.getTotalCommissionEarned(1L)).thenReturn(new BigDecimal("150000.00"));
 
         CommissionPaymentEntity cp1 = new CommissionPaymentEntity();
@@ -145,7 +153,7 @@ class PartyLedgerServiceTest {
 
     @Test
     void testDateFiltering() {
-        when(partyEntryRepository.findById(1L)).thenReturn(Optional.of(party));
+        when(partyRepository.findById(1L)).thenReturn(Optional.of(party));
         when(commissionCalculationService.getTotalCommissionEarned(1L)).thenReturn(new BigDecimal("150000.00"));
 
         CommissionPaymentEntity cp1 = new CommissionPaymentEntity();
@@ -171,19 +179,23 @@ class PartyLedgerServiceTest {
 
     @Test
     void testPartyNotFound() {
-        when(partyEntryRepository.findById(99L)).thenReturn(Optional.empty());
+        when(partyRepository.findById(99L)).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> partyLedgerService.getPartyLedger(99L, defaultFilter));
     }
 
     @Test
     void testSummaryEndpoint() {
-        when(partyEntryRepository.findById(1L)).thenReturn(Optional.of(party));
+        when(partyRepository.findById(1L)).thenReturn(Optional.of(party));
         when(commissionCalculationService.getTotalCommissionEarned(1L)).thenReturn(new BigDecimal("200000.00"));
         
         CommissionPaymentEntity cp1 = new CommissionPaymentEntity();
         cp1.setPaymentAmount(new BigDecimal("50000.00"));
         
         when(commissionPaymentRepository.findByParty_IdAndStatusOrderByPaymentDateDescCommissionPaymentIdDesc(1L, "ACTIVE")).thenReturn(Collections.singletonList(cp1));
+        when(commissionPaymentRepository.sumActivePayablePaymentAmountByPartyId(1L))
+                .thenReturn(new BigDecimal("50000.00"));
+        when(commissionPaymentRepository.sumAdjustedAdvanceAmountByPartyId(1L))
+                .thenReturn(BigDecimal.ZERO);
 
         PartyLedgerSummaryResponse response = partyLedgerService.getPartyLedgerSummary(1L);
 

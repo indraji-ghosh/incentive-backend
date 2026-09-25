@@ -22,6 +22,10 @@ public interface SiteRepository
             Long siteId
     );
 
+    java.util.Optional<SiteEntity> findBySiteNameIgnoreCase(String siteName);
+
+    java.util.Optional<SiteEntity> findBySiteShortCodeIgnoreCase(String siteShortCode);
+
     @Query("""
             SELECT s
             FROM SiteEntity s

@@ -20,6 +20,13 @@ public class PaymentTypeDataInitializer implements CommandLineRunner {
         initPaymentType("BILL", "Bill Based", "Commission is payable after the bill is generated.");
         initPaymentType("BILL_PAYMENT", "Bill Payment Based", "Commission is payable after customer payment is received.");
         initPaymentType("FIXED", "Fixed", "Commission is paid according to a fixed agreed amount.");
+
+        // New standard business payment concepts
+        initPaymentType("RAKE_BASED", "Rake Based", "Payable calculated per rake transaction.");
+        initPaymentType("WAGON_BASED", "Wagon Based", "Payable calculated per wagon count.");
+        initPaymentType("MT_BASED", "MT Based", "Payable calculated per metric ton.");
+        initPaymentType("MONTHLY_FIXED", "Monthly Fixed", "Payable calculated on a monthly fixed basis on the 1st of the month.");
+        initPaymentType("BILL_BASED", "Bill Based", "Payable calculated against bill generation.");
     }
 
     private void initPaymentType(String code, String name, String description) {

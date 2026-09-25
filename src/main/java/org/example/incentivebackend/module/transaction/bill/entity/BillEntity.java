@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.example.incentivebackend.common.entity.BaseEntity;
 import org.example.incentivebackend.module.master.client.entity.ClientEntity;
+import org.example.incentivebackend.module.master.site.entity.SiteEntity;
+import org.example.incentivebackend.module.transaction.bill.enums.BillPaymentStatus;
 import org.example.incentivebackend.module.transaction.partyentry.entity.PartyEntryEntity;
 
 import java.math.BigDecimal;
@@ -23,6 +25,10 @@ import java.util.List;
                 @Index(
                         name = "IDX_TX_BILL_PARTY",
                         columnList = "party_id"
+                ),
+                @Index(
+                        name = "IDX_TX_BILL_SITE",
+                        columnList = "site_id"
                 ),
                 @Index(
                         name = "IDX_TX_BILL_WORKING_MONTH",
@@ -68,17 +74,23 @@ public class BillEntity extends BaseEntity {
     )
     private ClientEntity client;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "party_id",
-            nullable = false,
             foreignKey = @ForeignKey(
                     name = "FK_TX_BILL_PARTY"
             )
     )
     private PartyEntryEntity party;
 
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "site_id",
+            foreignKey = @ForeignKey(
+                    name = "FK_TX_BILL_SITE"
+            )
+    )
+    private SiteEntity site;
 
     @Column(
             name = "bill_amount",
@@ -87,6 +99,27 @@ public class BillEntity extends BaseEntity {
             scale = 2
     )
     private BigDecimal billAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(
+            name = "payment_status",
+            length = 20
+    )
+    private BillPaymentStatus paymentStatus = BillPaymentStatus.UNPAID;
+
+    @Column(
+            name = "paid_amount",
+            precision = 18,
+            scale = 2
+    )
+    private BigDecimal paidAmount = BigDecimal.ZERO;
+
+    @Column(
+            name = "outstanding_amount",
+            precision = 18,
+            scale = 2
+    )
+    private BigDecimal outstandingAmount;
 
     @Column(
             name = "remarks",

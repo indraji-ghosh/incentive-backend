@@ -24,8 +24,10 @@ public class BillRequest {
     @NotNull(message = "Client is required")
     private Long clientId;
 
-    @NotNull(message = "Party is required")
     private Long partyId;
+
+    @NotNull(message = "Site (Siding) is required")
+    private Long siteId;
 
     @NotNull(message = "Bill amount is required")
     @DecimalMin(

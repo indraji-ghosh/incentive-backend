@@ -5,6 +5,7 @@ import org.example.incentivebackend.common.response.ApiResponse;
 import org.example.incentivebackend.common.response.ResponseBuilder;
 import org.example.incentivebackend.module.transaction.commissionpayment.dto.request.CommissionPaymentFilter;
 import org.example.incentivebackend.module.transaction.commissionpayment.dto.request.CommissionPaymentRequest;
+import org.example.incentivebackend.module.transaction.commissionpayment.dto.request.PartyPaymentAdjustmentRequest;
 import org.example.incentivebackend.module.transaction.commissionpayment.dto.response.CommissionPaymentResponse;
 import org.example.incentivebackend.module.transaction.commissionpayment.dto.response.CommissionPaymentSummaryResponse;
 import org.example.incentivebackend.module.transaction.commissionpayment.dto.response.PartyCommissionPaymentHistoryResponse;
@@ -12,6 +13,7 @@ import org.example.incentivebackend.module.transaction.commissionpayment.service
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/transaction/commission-payments")
@@ -53,6 +55,34 @@ public class CommissionPaymentController {
     ) {
         PartyCommissionPaymentHistoryResponse response = commissionPaymentService.getPartyHistory(partyId);
         return ResponseBuilder.fetched("Commission Payment History", response);
+    }
+
+    @PostMapping("/advance")
+    public ResponseEntity<ApiResponse<CommissionPaymentResponse>> createAdvance(
+            @Valid @RequestBody CommissionPaymentRequest request
+    ) {
+        CommissionPaymentResponse response = commissionPaymentService.createAdvancePayment(request);
+        return ResponseBuilder.created("Advance Payment", response);
+    }
+
+    @PostMapping("/advance/adjust")
+    public ResponseEntity<ApiResponse<CommissionPaymentResponse>> adjustAdvance(
+            @Valid @RequestBody PartyPaymentAdjustmentRequest request
+    ) {
+        CommissionPaymentResponse response = commissionPaymentService.adjustAdvance(
+                request.getPartyId(),
+                request.getPayableId(),
+                request.getAdjustmentAmount()
+        );
+        return ResponseBuilder.updated("Advance Adjusted", response);
+    }
+
+    @GetMapping("/party/{partyId}/advance-balance")
+    public ResponseEntity<ApiResponse<BigDecimal>> getAdvanceBalance(
+            @PathVariable Long partyId
+    ) {
+        BigDecimal balance = commissionPaymentService.getAvailableAdvanceBalance(partyId);
+        return ResponseBuilder.fetched("Advance Balance", balance);
     }
 
     @PutMapping("/{id}")

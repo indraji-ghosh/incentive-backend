@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.example.incentivebackend.common.entity.BaseEntity;
 import org.example.incentivebackend.common.enums.StatusEnum;
 import org.example.incentivebackend.module.master.client.entity.ClientEntity;
+import org.example.incentivebackend.module.master.servicetype.entity.ServiceTypeEntity;
+import org.example.incentivebackend.module.master.site.entity.SiteEntity;
 import org.example.incentivebackend.module.transaction.partyentry.entity.PartyEntryEntity;
 
 import java.time.LocalDate;
@@ -25,6 +27,10 @@ import java.util.List;
                         columnList = "party_id"
                 ),
                 @Index(
+                        name = "IDX_TX_RAKE_ENTRY_SITE",
+                        columnList = "site_id"
+                ),
+                @Index(
                         name = "IDX_TX_RAKE_ENTRY_WORKING_MONTH",
                         columnList = "working_month"
                 )
@@ -38,6 +44,12 @@ public class RakeEntryEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "rake_entry_id")
     private Long rakeEntryId;
+
+    @Column(
+            name = "rake_number",
+            length = 50
+    )
+    private String rakeNumber;
 
     @Column(
             name = "working_month",
@@ -55,15 +67,31 @@ public class RakeEntryEntity extends BaseEntity {
     )
     private ClientEntity client;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "party_id",
-            nullable = false,
             foreignKey = @ForeignKey(
                     name = "FK_TX_RAKE_ENTRY_PARTY"
             )
     )
     private PartyEntryEntity party;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "site_id",
+            foreignKey = @ForeignKey(
+                    name = "FK_TX_RAKE_ENTRY_SITE"
+            )
+    )
+    private SiteEntity site;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "tx_rake_service",
+            joinColumns = @JoinColumn(name = "rake_entry_id"),
+            inverseJoinColumns = @JoinColumn(name = "service_id")
+    )
+    private List<ServiceTypeEntity> services = new ArrayList<>();
 
     @Column(
             name = "remarks",

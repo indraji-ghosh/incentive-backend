@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.example.incentivebackend.common.enums.StatusEnum;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 public class RakeEntryResponse {
 
     private Long rakeEntryId;
+    private String rakeNumber;
     private LocalDate workingMonth;
 
     private Long clientId;
@@ -23,6 +25,16 @@ public class RakeEntryResponse {
 
     private Long partyId;
     private String partyName;
+
+    private Long siteId;
+    private String siteName;
+    private String siteShortCode;
+
+    private List<Long> serviceIds;
+    private List<String> serviceNames;
+
+    private Integer totalWagons;
+    private BigDecimal totalWeight;
 
     private String remarks;
     private StatusEnum rakeStatus;

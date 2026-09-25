@@ -4,8 +4,8 @@ import org.example.incentivebackend.module.transaction.commissionpayment.dto.req
 import org.example.incentivebackend.module.transaction.commissionpayment.entity.CommissionPaymentEntity;
 import org.example.incentivebackend.module.transaction.commissionpayment.mapper.CommissionPaymentMapper;
 import org.example.incentivebackend.module.transaction.commissionpayment.repository.CommissionPaymentRepository;
-import org.example.incentivebackend.module.transaction.partyentry.entity.PartyEntryEntity;
-import org.example.incentivebackend.module.transaction.partyentry.repository.PartyEntryRepository;
+import org.example.incentivebackend.module.master.party.entity.PartyEntity;
+import org.example.incentivebackend.module.master.party.repository.PartyRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +28,7 @@ class CommissionPaymentServiceImplTest {
     private CommissionPaymentRepository repository;
 
     @Mock
-    private PartyEntryRepository partyEntryRepository;
+    private PartyRepository partyRepository;
 
     @Mock
     private CommissionCalculationService commissionCalculationService;
@@ -39,11 +39,11 @@ class CommissionPaymentServiceImplTest {
     @InjectMocks
     private CommissionPaymentServiceImpl service;
 
-    private PartyEntryEntity mockParty;
+    private PartyEntity mockParty;
 
     @BeforeEach
     void setUp() {
-        mockParty = new PartyEntryEntity();
+        mockParty = new PartyEntity();
         mockParty.setId(1L);
         mockParty.setPartyName("Test Party");
     }
@@ -55,9 +55,10 @@ class CommissionPaymentServiceImplTest {
         request.setPaymentDate(LocalDate.now());
         request.setPaymentAmount(new BigDecimal("50000.00"));
 
-        when(partyEntryRepository.findById(1L)).thenReturn(Optional.of(mockParty));
+        when(partyRepository.findById(1L)).thenReturn(Optional.of(mockParty));
         when(commissionCalculationService.getTotalCommissionEarned(1L)).thenReturn(new BigDecimal("150000.00"));
-        when(repository.sumActivePaymentAmountByPartyId(1L)).thenReturn(new BigDecimal("0.00"));
+        when(repository.sumActivePayablePaymentAmountByPartyId(1L)).thenReturn(new BigDecimal("0.00"));
+        when(repository.sumAdjustedAdvanceAmountByPartyId(1L)).thenReturn(new BigDecimal("0.00"));
         
         CommissionPaymentEntity savedEntity = new CommissionPaymentEntity();
         savedEntity.setCommissionPaymentId(10L);
@@ -72,9 +73,10 @@ class CommissionPaymentServiceImplTest {
         request.setPartyId(1L);
         request.setPaymentAmount(new BigDecimal("60000.00"));
 
-        when(partyEntryRepository.findById(1L)).thenReturn(Optional.of(mockParty));
+        when(partyRepository.findById(1L)).thenReturn(Optional.of(mockParty));
         when(commissionCalculationService.getTotalCommissionEarned(1L)).thenReturn(new BigDecimal("150000.00"));
-        when(repository.sumActivePaymentAmountByPartyId(1L)).thenReturn(new BigDecimal("100000.00"));
+        when(repository.sumActivePayablePaymentAmountByPartyId(1L)).thenReturn(new BigDecimal("100000.00"));
+        when(repository.sumAdjustedAdvanceAmountByPartyId(1L)).thenReturn(new BigDecimal("0.00"));
 
         Exception e = assertThrows(IllegalArgumentException.class, () -> service.create(request));
         assertTrue(e.getMessage().contains("exceeds outstanding"));

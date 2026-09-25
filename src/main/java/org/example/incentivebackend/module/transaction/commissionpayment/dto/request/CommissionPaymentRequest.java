@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class CommissionPaymentRequest {
@@ -21,4 +22,6 @@ public class CommissionPaymentRequest {
     private BigDecimal paymentAmount;
 
     private String remarks;
+
+    private List<Long> payableIds;
 }

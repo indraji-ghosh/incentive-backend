@@ -24,7 +24,7 @@ public class PartyPaymentAdjustmentEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commission_payment_id", nullable = false)
-    private CommissionPaymentEntity advancePayment;
+    private CommissionPaymentEntity commissionPayment;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "party_payable_id", nullable = false)
@@ -32,4 +32,7 @@ public class PartyPaymentAdjustmentEntity extends BaseEntity {
 
     @Column(name = "adjusted_amount", nullable = false, precision = 19, scale = 2)
     private BigDecimal adjustedAmount;
+
+    @Column(name = "allocated_amount", nullable = false, precision = 19, scale = 2)
+    private BigDecimal allocatedAmount;
 }

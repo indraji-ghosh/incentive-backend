@@ -99,7 +99,9 @@ public class PartyPayableEntity extends BaseEntity {
     @Column(name = "payment_status", length = 20)
     private PaymentStatusEnum paymentStatus = PaymentStatusEnum.UNPAID;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "commission_payment_id")
-    private CommissionPaymentEntity commissionPayment;
+    @Column(name = "paid_amount", precision = 18, scale = 2)
+    private BigDecimal paidAmount = BigDecimal.ZERO;
+
+    @Column(name = "outstanding_amount", precision = 18, scale = 2)
+    private BigDecimal outstandingAmount;
 }

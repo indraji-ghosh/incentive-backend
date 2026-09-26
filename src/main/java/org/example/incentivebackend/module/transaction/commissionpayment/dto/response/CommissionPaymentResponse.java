@@ -19,4 +19,16 @@ public class CommissionPaymentResponse {
     private Long createdBy;
     private String paymentType;
     private BigDecimal adjustedAmount;
+    private java.util.List<PaymentAllocationResponse> allocations;
+
+    @Data
+    public static class PaymentAllocationResponse {
+        private Long accruedPayableId;
+        private String payableType;
+        private String reference;
+        private BigDecimal originalAmount;
+        private BigDecimal previouslyPaid;
+        private BigDecimal allocatedAmount;
+        private BigDecimal remainingAmount;
+    }
 }

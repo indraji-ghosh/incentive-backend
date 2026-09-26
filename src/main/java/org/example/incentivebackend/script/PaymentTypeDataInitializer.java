@@ -15,18 +15,23 @@ public class PaymentTypeDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        
+        // Clean up old duplicated payment types
+        paymentTypeRepository.findAll().forEach(pt -> {
+            if (!pt.getCode().equals("RAKE_BASED") && 
+                !pt.getCode().equals("BILL_PAYMENT_BASED") && 
+                !pt.getCode().equals("MONTHLY_FIXED")) {
+                try {
+                    paymentTypeRepository.delete(pt);
+                } catch (Exception e) {
+                    // Ignore if foreign key constraint fails
+                }
+            }
+        });
 
-        initPaymentType("RAKE", "Rake Based", "Commission is payable after rake covering is completed.");
-        initPaymentType("BILL", "Bill Based", "Commission is payable after the bill is generated.");
-        initPaymentType("BILL_PAYMENT", "Bill Payment Based", "Commission is payable after customer payment is received.");
-        initPaymentType("FIXED", "Fixed", "Commission is paid according to a fixed agreed amount.");
-
-        // New standard business payment concepts
         initPaymentType("RAKE_BASED", "Rake Based", "Payable calculated per rake transaction.");
-        initPaymentType("WAGON_BASED", "Wagon Based", "Payable calculated per wagon count.");
-        initPaymentType("MT_BASED", "MT Based", "Payable calculated per metric ton.");
-        initPaymentType("MONTHLY_FIXED", "Monthly Fixed", "Payable calculated on a monthly fixed basis on the 1st of the month.");
-        initPaymentType("BILL_BASED", "Bill Based", "Payable calculated against bill generation.");
+        initPaymentType("BILL_PAYMENT_BASED", "Bill Payment Based", "Commission is payable after customer payment is received.");
+        initPaymentType("MONTHLY_FIXED", "Monthly Fixed", "Payable calculated on a monthly fixed basis.");
     }
 
     private void initPaymentType(String code, String name, String description) {

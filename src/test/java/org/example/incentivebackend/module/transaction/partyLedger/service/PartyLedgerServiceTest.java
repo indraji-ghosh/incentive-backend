@@ -53,7 +53,7 @@ class PartyLedgerServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         when(partyPayableRepository.findByParty_IdAndStatus(any(), any())).thenReturn(Collections.emptyList());
-        when(partyPaymentAdjustmentRepository.findByAdvancePayment_Party_Id(any())).thenReturn(Collections.emptyList());
+        when(partyPaymentAdjustmentRepository.findByCommissionPayment_Party_Id(any())).thenReturn(Collections.emptyList());
         party = new PartyEntity();
         party.setId(1L);
         party.setPartyName("Test Party");

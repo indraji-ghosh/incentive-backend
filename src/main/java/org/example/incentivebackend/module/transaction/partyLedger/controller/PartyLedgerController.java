@@ -8,7 +8,7 @@ import org.example.incentivebackend.module.transaction.partyLedger.dto.response.
 import org.example.incentivebackend.module.transaction.partyLedger.dto.response.PartyLedgerSummaryResponse;
 import org.example.incentivebackend.module.transaction.partyLedger.service.PartyLedgerService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,7 +19,6 @@ public class PartyLedgerController {
     private final PartyLedgerService partyLedgerService;
 
     @GetMapping("/party/{partyId}")
-    @PreAuthorize("hasAuthority('PARTY_LEDGER_VIEW') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PartyLedgerResponse>> getPartyLedger(
             @PathVariable Long partyId,
             @ModelAttribute PartyLedgerFilter filter
@@ -29,7 +28,6 @@ public class PartyLedgerController {
     }
 
     @GetMapping("/party/{partyId}/summary")
-    @PreAuthorize("hasAuthority('PARTY_LEDGER_VIEW') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PartyLedgerSummaryResponse>> getPartyLedgerSummary(
             @PathVariable Long partyId
     ) {

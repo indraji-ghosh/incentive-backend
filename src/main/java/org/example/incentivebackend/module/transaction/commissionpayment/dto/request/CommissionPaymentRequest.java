@@ -23,5 +23,15 @@ public class CommissionPaymentRequest {
 
     private String remarks;
 
-    private List<Long> payableIds;
+    private List<PaymentAllocationRequest> allocations;
+
+    @Data
+    public static class PaymentAllocationRequest {
+        @NotNull(message = "Payable ID is required")
+        private Long payableId;
+
+        @NotNull(message = "Allocation amount is required")
+        @DecimalMin(value = "0.01", message = "Allocation amount must be greater than zero")
+        private BigDecimal amount;
+    }
 }

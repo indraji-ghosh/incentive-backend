@@ -33,6 +33,9 @@ public class PartyPayableResponse {
     private BigDecimal payableAmount;
     private LocalDate transactionDate;
     private StatusEnum status;
+    private String paymentStatus;
+    private BigDecimal paidAmount;
+    private BigDecimal outstandingAmount;
     private String remarks;
     private LocalDateTime createdAt;
 }

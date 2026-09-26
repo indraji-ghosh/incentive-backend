@@ -2,6 +2,7 @@ package org.example.incentivebackend.module.master.user;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.incentivebackend.module.master.designation.entity.DesignationEntity;
 
 @Entity
 @Table(name = "mm_user")
@@ -34,7 +35,17 @@ public class UserEntity {
     @Column(name = "email", unique = true, length = 150)
     private String email;
 
+    @Column(name = "mobile_number", length = 20)
+    private String mobileNumber;
+
+    @Column(name = "role", length = 50)
+    private String role;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private UserStatus status;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "designation_id")
+    private DesignationEntity designation;
 }

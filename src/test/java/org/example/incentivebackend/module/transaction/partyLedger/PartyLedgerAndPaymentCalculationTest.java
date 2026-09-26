@@ -104,7 +104,7 @@ class PartyLedgerAndPaymentCalculationTest {
                 .thenReturn(new BigDecimal("35000.00"));
         org.mockito.Mockito.lenient().when(commissionPaymentRepository.sumAdjustedAdvanceAmountByPartyId(1L))
                 .thenReturn(BigDecimal.ZERO);
-        org.mockito.Mockito.lenient().when(partyPaymentAdjustmentRepository.findByAdvancePayment_Party_Id(1L))
+        org.mockito.Mockito.lenient().when(partyPaymentAdjustmentRepository.findByCommissionPayment_Party_Id(1L))
                 .thenReturn(java.util.Collections.emptyList());
 
         // Test Summary: Outstanding = Total Payable (50,000) - Total Paid (35,000) = 15,000
@@ -150,7 +150,7 @@ class PartyLedgerAndPaymentCalculationTest {
         when(partyPayableRepository.findByParty_IdAndStatus(1L, StatusEnum.A)).thenReturn(List.of(payable));
         when(commissionPaymentRepository.findByParty_IdAndStatusOrderByPaymentDateDescCommissionPaymentIdDesc(1L, "ACTIVE"))
                 .thenReturn(List.of(payment1, payment2));
-        when(partyPaymentAdjustmentRepository.findByAdvancePayment_Party_Id(1L))
+        when(partyPaymentAdjustmentRepository.findByCommissionPayment_Party_Id(1L))
                 .thenReturn(java.util.Collections.emptyList());
 
         PartyLedgerFilter filter = new PartyLedgerFilter();

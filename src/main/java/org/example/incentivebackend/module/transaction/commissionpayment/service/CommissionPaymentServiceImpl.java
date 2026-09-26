@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.example.incentivebackend.common.enums.StatusEnum;
 import jakarta.annotation.PostConstruct;
 
 import java.math.BigDecimal;
@@ -83,6 +84,22 @@ public class CommissionPaymentServiceImpl implements CommissionPaymentService {
             throw new IllegalArgumentException("No outstanding commission left for this party");
         }
 
+        if (request.getAllocations() == null || request.getAllocations().isEmpty()) {
+            throw new IllegalArgumentException("At least one payable allocation must exist for a payable-related payment");
+        }
+
+        BigDecimal totalAllocated = BigDecimal.ZERO;
+        for (CommissionPaymentRequest.PaymentAllocationRequest alloc : request.getAllocations()) {
+            if (alloc.getAmount() == null || alloc.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Allocation amount must be greater than zero");
+            }
+            totalAllocated = totalAllocated.add(alloc.getAmount());
+        }
+
+        if (totalAllocated.compareTo(request.getPaymentAmount()) != 0) {
+            throw new IllegalArgumentException("Total allocation amount must equal payment amount");
+        }
+
         CommissionPaymentEntity entity = new CommissionPaymentEntity();
         entity.setParty(party);
         entity.setPaymentDate(request.getPaymentDate());
@@ -94,18 +111,48 @@ public class CommissionPaymentServiceImpl implements CommissionPaymentService {
 
         entity = repository.save(entity);
 
-        if (request.getPayableIds() != null && !request.getPayableIds().isEmpty()) {
-            List<PartyPayableEntity> payables = partyPayableRepository.findAllById(request.getPayableIds());
-            for (PartyPayableEntity payable : payables) {
-                if (payable.getParty().getId().equals(party.getId())) {
-                    payable.setPaymentStatus(PaymentStatusEnum.PAID);
-                    payable.setCommissionPayment(entity);
-                }
+        for (CommissionPaymentRequest.PaymentAllocationRequest alloc : request.getAllocations()) {
+            PartyPayableEntity payable = partyPayableRepository.findById(alloc.getPayableId())
+                    .orElseThrow(() -> new IllegalArgumentException("Payable not found: " + alloc.getPayableId()));
+
+            if (!payable.getParty().getId().equals(party.getId())) {
+                throw new IllegalArgumentException("Allocation payable must belong to the selected party");
             }
-            partyPayableRepository.saveAll(payables);
+
+            if (!StatusEnum.A.equals(payable.getStatus())) {
+                throw new IllegalArgumentException("Deleted/inactive payable cannot receive payment");
+            }
+
+            BigDecimal currentPaid = payable.getPaidAmount() != null ? payable.getPaidAmount() : BigDecimal.ZERO;
+            BigDecimal payableOutstanding = payable.getOutstandingAmount() != null ? payable.getOutstandingAmount() : payable.getPayableAmount().subtract(currentPaid);
+
+            if (alloc.getAmount().compareTo(payableOutstanding) > 0) {
+                throw new IllegalArgumentException("Allocation amount cannot exceed payable outstanding amount");
+            }
+
+            BigDecimal newPaid = currentPaid.add(alloc.getAmount());
+            BigDecimal newOutstanding = payable.getPayableAmount().subtract(newPaid);
+
+            payable.setPaidAmount(newPaid);
+            payable.setOutstandingAmount(newOutstanding);
+
+            if (newOutstanding.compareTo(BigDecimal.ZERO) == 0) {
+                payable.setPaymentStatus(PaymentStatusEnum.PAID);
+            } else if (newPaid.compareTo(BigDecimal.ZERO) > 0) {
+                payable.setPaymentStatus(PaymentStatusEnum.PARTIALLY_PAID);
+            }
+
+            partyPayableRepository.save(payable);
+
+            PartyPaymentAdjustmentEntity adjustment = new PartyPaymentAdjustmentEntity();
+            adjustment.setCommissionPayment(entity);
+            adjustment.setPayable(payable);
+            adjustment.setAdjustedAmount(alloc.getAmount());
+            adjustment.setAllocatedAmount(alloc.getAmount());
+            adjustmentRepository.save(adjustment);
         }
 
-        return mapper.toResponse(entity);
+        return enrichResponseWithAllocations(mapper.toResponse(entity), entity);
     }
 
     @Override
@@ -129,7 +176,7 @@ public class CommissionPaymentServiceImpl implements CommissionPaymentService {
         entity.setPaymentNo("ADV-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
 
         entity = repository.save(entity);
-        return mapper.toResponse(entity);
+        return enrichResponseWithAllocations(mapper.toResponse(entity), entity);
     }
 
     @Override
@@ -167,9 +214,10 @@ public class CommissionPaymentServiceImpl implements CommissionPaymentService {
             BigDecimal amountToTake = remainingToAdjust.min(advanceAvailable);
 
             PartyPaymentAdjustmentEntity adjustment = new PartyPaymentAdjustmentEntity();
-            adjustment.setAdvancePayment(advance);
+            adjustment.setCommissionPayment(advance);
             adjustment.setPayable(payable);
             adjustment.setAdjustedAmount(amountToTake);
+            adjustment.setAllocatedAmount(amountToTake);
             adjustmentRepository.save(adjustment);
 
             advance.setAdjustedAmount(advance.getAdjustedAmount().add(amountToTake));
@@ -181,7 +229,7 @@ public class CommissionPaymentServiceImpl implements CommissionPaymentService {
         if (lastAdvance == null) {
              throw new IllegalStateException("No advances available to adjust");
         }
-        return mapper.toResponse(lastAdvance);
+        return enrichResponseWithAllocations(mapper.toResponse(lastAdvance), lastAdvance);
     }
 
     @Override
@@ -233,6 +281,10 @@ public class CommissionPaymentServiceImpl implements CommissionPaymentService {
             
             BigDecimal totalAdvance = repository.sumActiveAdvanceAmountByPartyId(party.getId());
             BigDecimal totalAdvanceAdjusted = repository.sumAdjustedAdvanceAmountByPartyId(party.getId());
+            
+            if (totalAdvance == null) totalAdvance = BigDecimal.ZERO;
+            if (totalAdvanceAdjusted == null) totalAdvanceAdjusted = BigDecimal.ZERO;
+            
             res.setTotalAdvance(totalAdvance);
             res.setTotalAdvanceAdjusted(totalAdvanceAdjusted);
             res.setAvailableAdvance(totalAdvance.subtract(totalAdvanceAdjusted));
@@ -255,7 +307,7 @@ public class CommissionPaymentServiceImpl implements CommissionPaymentService {
     public CommissionPaymentResponse getById(Long id) {
         CommissionPaymentEntity entity = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
-        return mapper.toResponse(entity);
+        return enrichResponseWithAllocations(mapper.toResponse(entity), entity);
     }
 
     @Override
@@ -264,7 +316,9 @@ public class CommissionPaymentServiceImpl implements CommissionPaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Party not found: " + partyId));
                 
         List<CommissionPaymentEntity> entities = repository.findByParty_IdAndStatusOrderByPaymentDateDescCommissionPaymentIdDesc(partyId, "ACTIVE");
-        List<CommissionPaymentResponse> payments = entities.stream().map(mapper::toResponse).collect(Collectors.toList());
+        List<CommissionPaymentResponse> payments = entities.stream()
+                .map(entity -> enrichResponseWithAllocations(mapper.toResponse(entity), entity))
+                .collect(Collectors.toList());
         
         BigDecimal earned = commissionCalculationService.getTotalCommissionEarned(partyId);
         BigDecimal paid = getPayablePaidAndAdjusted(partyId);
@@ -290,6 +344,10 @@ public class CommissionPaymentServiceImpl implements CommissionPaymentService {
         
         BigDecimal totalAdvance = repository.sumActiveAdvanceAmountByPartyId(partyId);
         BigDecimal totalAdvanceAdjusted = repository.sumAdjustedAdvanceAmountByPartyId(partyId);
+        
+        if (totalAdvance == null) totalAdvance = BigDecimal.ZERO;
+        if (totalAdvanceAdjusted == null) totalAdvanceAdjusted = BigDecimal.ZERO;
+        
         res.setTotalAdvance(totalAdvance);
         res.setTotalAdvanceAdjusted(totalAdvanceAdjusted);
         res.setAvailableAdvance(totalAdvance.subtract(totalAdvanceAdjusted));
@@ -328,7 +386,7 @@ public class CommissionPaymentServiceImpl implements CommissionPaymentService {
         entity.setRemarks(request.getRemarks());
         
         entity = repository.save(entity);
-        return mapper.toResponse(entity);
+        return enrichResponseWithAllocations(mapper.toResponse(entity), entity);
     }
 
     @Override
@@ -345,5 +403,24 @@ public class CommissionPaymentServiceImpl implements CommissionPaymentService {
         // Soft delete
         entity.setStatus("DELETED");
         repository.save(entity);
+    }
+
+    private CommissionPaymentResponse enrichResponseWithAllocations(CommissionPaymentResponse response, CommissionPaymentEntity entity) {
+        List<PartyPaymentAdjustmentEntity> adjustments = adjustmentRepository.findByCommissionPayment_CommissionPaymentId(entity.getCommissionPaymentId());
+        if (adjustments != null && !adjustments.isEmpty()) {
+            List<CommissionPaymentResponse.PaymentAllocationResponse> allocations = adjustments.stream().map(adj -> {
+                CommissionPaymentResponse.PaymentAllocationResponse alloc = new CommissionPaymentResponse.PaymentAllocationResponse();
+                alloc.setAccruedPayableId(adj.getPayable().getId());
+                alloc.setPayableType(adj.getPayable().getSourceType());
+                alloc.setReference(adj.getPayable().getSourceReference() != null ? adj.getPayable().getSourceReference() : adj.getPayable().getSourceId());
+                alloc.setOriginalAmount(adj.getPayable().getPayableAmount());
+                alloc.setPreviouslyPaid(adj.getPayable().getPaidAmount() != null ? adj.getPayable().getPaidAmount().subtract(adj.getAdjustedAmount()) : BigDecimal.ZERO);
+                alloc.setAllocatedAmount(adj.getAdjustedAmount());
+                alloc.setRemainingAmount(adj.getPayable().getOutstandingAmount());
+                return alloc;
+            }).collect(Collectors.toList());
+            response.setAllocations(allocations);
+        }
+        return response;
     }
 }

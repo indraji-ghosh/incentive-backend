@@ -442,7 +442,7 @@ public class PartyPayableServiceImpl implements PartyPayableService {
     @Override
     @Transactional(readOnly = true)
     public List<PartyPayableResponse> findByParty(Long partyId) {
-        return mapper.toResponseList(partyPayableRepository.findByParty_IdAndStatusAndPaymentStatus(partyId, StatusEnum.A, org.example.incentivebackend.common.enums.PaymentStatusEnum.UNPAID));
+        return mapper.toResponseList(partyPayableRepository.findByParty_IdAndStatusAndPaymentStatusIn(partyId, StatusEnum.A, List.of(org.example.incentivebackend.common.enums.PaymentStatusEnum.UNPAID, org.example.incentivebackend.common.enums.PaymentStatusEnum.PARTIALLY_PAID)));
     }
 
     @Override

@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface PartyPaymentAdjustmentRepository extends JpaRepository<PartyPaymentAdjustmentEntity, Long> {
-    List<PartyPaymentAdjustmentEntity> findByAdvancePayment_Party_Id(Long partyId);
+    List<PartyPaymentAdjustmentEntity> findByCommissionPayment_Party_Id(Long partyId);
+    List<PartyPaymentAdjustmentEntity> findByCommissionPayment_CommissionPaymentId(Long commissionPaymentId);
     List<PartyPaymentAdjustmentEntity> findByPayable_Id(Long payableId);
 }

@@ -25,7 +25,7 @@ public interface PartyPayableRepository extends JpaRepository<PartyPayableEntity
 
     List<PartyPayableEntity> findByParty_IdAndStatus(Long partyId, StatusEnum status);
 
-    List<PartyPayableEntity> findByParty_IdAndStatusAndPaymentStatus(Long partyId, StatusEnum status, PaymentStatusEnum paymentStatus);
+    List<PartyPayableEntity> findByParty_IdAndStatusAndPaymentStatusIn(Long partyId, StatusEnum status, List<PaymentStatusEnum> paymentStatuses);
 
     List<PartyPayableEntity> findByParty_Id(Long partyId);
 

@@ -75,7 +75,7 @@ public class PartyLedgerService {
 
         List<CommissionPaymentEntity> payments = commissionPaymentRepository.findByParty_IdAndStatusOrderByPaymentDateDescCommissionPaymentIdDesc(partyId, "ACTIVE");
         List<PartyPayableEntity> payables = partyPayableRepository.findByParty_IdAndStatus(partyId, StatusEnum.A);
-        List<PartyPaymentAdjustmentEntity> adjustments = partyPaymentAdjustmentRepository.findByAdvancePayment_Party_Id(partyId);
+        List<PartyPaymentAdjustmentEntity> adjustments = partyPaymentAdjustmentRepository.findByCommissionPayment_Party_Id(partyId);
         
         List<PartyLedgerEntryResponse> allEntries = new ArrayList<>();
 
@@ -115,11 +115,21 @@ public class PartyLedgerService {
                         .amount(payment.getPaymentAmount())
                         .build());
             } else {
+                String desc = payment.getRemarks() != null ? payment.getRemarks() : "Commission Payment";
+                List<PartyPaymentAdjustmentEntity> allocs = adjustments.stream()
+                        .filter(a -> a.getCommissionPayment().getCommissionPaymentId().equals(payment.getCommissionPaymentId()))
+                        .collect(Collectors.toList());
+                if (!allocs.isEmpty()) {
+                    desc = "Against: " + allocs.stream()
+                            .map(a -> (a.getPayable().getSourceReference() != null ? a.getPayable().getSourceReference() : a.getPayable().getSourceId()) + " -> " + a.getAdjustedAmount())
+                            .collect(Collectors.joining(", "));
+                }
+
                 allEntries.add(PartyLedgerEntryResponse.builder()
                         .ledgerDate(payment.getPaymentDate())
                         .transactionType("COMMISSION_PAYMENT")
                         .referenceNo(payment.getPaymentNo())
-                        .description(payment.getRemarks() != null ? payment.getRemarks() : "Commission Payment")
+                        .description(desc)
                         .debit(payment.getPaymentAmount())
                         .credit(BigDecimal.ZERO)
                         .amount(payment.getPaymentAmount())
@@ -128,15 +138,17 @@ public class PartyLedgerService {
         }
 
         for (PartyPaymentAdjustmentEntity adj : adjustments) {
-            allEntries.add(PartyLedgerEntryResponse.builder()
-                    .ledgerDate(adj.getCreatedAt() != null ? adj.getCreatedAt().toLocalDate() : LocalDate.now())
-                    .transactionType("ADVANCE_ADJUSTMENT")
-                    .referenceNo("ADJ-" + adj.getAdjustmentId())
-                    .description("Advance Adjusted against Payable #" + adj.getPayable().getId())
-                    .debit(adj.getAdjustedAmount()) // This reduces the payable balance
-                    .credit(BigDecimal.ZERO)
-                    .amount(adj.getAdjustedAmount())
-                    .build());
+            if (adj.getCommissionPayment() != null && "ADVANCE_PAYMENT".equals(adj.getCommissionPayment().getPaymentType())) {
+                allEntries.add(PartyLedgerEntryResponse.builder()
+                        .ledgerDate(adj.getCreatedAt() != null ? adj.getCreatedAt().toLocalDate() : LocalDate.now())
+                        .transactionType("ADVANCE_ADJUSTMENT")
+                        .referenceNo("ADJ-" + adj.getAdjustmentId())
+                        .description("Advance Adjusted against Payable #" + adj.getPayable().getId())
+                        .debit(adj.getAdjustedAmount()) // This reduces the payable balance
+                        .credit(BigDecimal.ZERO)
+                        .amount(adj.getAdjustedAmount())
+                        .build());
+            }
         }
 
         // Sort chronologically

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.validation.FieldError;
 import java.util.stream.Collectors;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 
@@ -59,6 +60,18 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+            AccessDeniedException ex
+    ) {
+        ErrorResponse response = new ErrorResponse(
+                false,
+                "You do not have permission to perform this action",
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

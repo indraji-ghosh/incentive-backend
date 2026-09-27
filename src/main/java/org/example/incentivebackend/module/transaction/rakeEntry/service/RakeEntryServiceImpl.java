@@ -66,8 +66,9 @@ public class RakeEntryServiceImpl implements RakeEntryService {
 
         resolveAndSetSite(request, rakeEntry);
 
-        if (request.getServiceIds() != null && !request.getServiceIds().isEmpty()) {
-            rakeEntry.setServices(serviceTypeRepository.findAllById(request.getServiceIds()));
+        if (request.getServiceId() != null) {
+            rakeEntry.setService(serviceTypeRepository.findById(request.getServiceId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Service not found")));
         }
 
         rakeEntry.setRakeStatus(StatusEnum.A);
@@ -112,8 +113,8 @@ public class RakeEntryServiceImpl implements RakeEntryService {
                 p = cb.and(p, cb.equal(root.get("site").get("siteId"), siteId));
             }
             if (serviceId != null) {
-                Join<RakeEntryEntity, org.example.incentivebackend.module.master.servicetype.entity.ServiceTypeEntity> servicesJoin = root.join("services", JoinType.INNER);
-                p = cb.and(p, cb.equal(servicesJoin.get("id"), serviceId));
+                Join<RakeEntryEntity, org.example.incentivebackend.module.master.servicetype.entity.ServiceTypeEntity> serviceJoin = root.join("service", JoinType.INNER);
+                p = cb.and(p, cb.equal(serviceJoin.get("id"), serviceId));
             }
             return p;
         };
@@ -153,8 +154,9 @@ public class RakeEntryServiceImpl implements RakeEntryService {
 
         resolveAndSetSite(request, rakeEntry);
 
-        if (request.getServiceIds() != null) {
-            rakeEntry.setServices(serviceTypeRepository.findAllById(request.getServiceIds()));
+        if (request.getServiceId() != null) {
+            rakeEntry.setService(serviceTypeRepository.findById(request.getServiceId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Service not found")));
         }
 
         rakeEntry.getAnnexures().clear();

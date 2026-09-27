@@ -85,13 +85,14 @@ public class RakeEntryEntity extends BaseEntity {
     )
     private SiteEntity site;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "tx_rake_service",
-            joinColumns = @JoinColumn(name = "rake_entry_id"),
-            inverseJoinColumns = @JoinColumn(name = "service_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "service_id",
+            foreignKey = @ForeignKey(
+                    name = "FK_TX_RAKE_ENTRY_SERVICE"
+            )
     )
-    private List<ServiceTypeEntity> services = new ArrayList<>();
+    private ServiceTypeEntity service;
 
     @Column(
             name = "remarks",

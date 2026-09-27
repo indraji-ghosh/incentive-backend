@@ -24,4 +24,6 @@ public class BillAnnexureResponse {
     private String destination;
 
     private Integer wagons;
+
+    private java.math.BigDecimal weight;
 }

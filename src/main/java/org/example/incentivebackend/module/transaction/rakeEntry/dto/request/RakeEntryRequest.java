@@ -25,7 +25,8 @@ public class RakeEntryRequest {
 
     private Long siteId;
 
-    private List<Long> serviceIds;
+    @NotNull(message = "Service is required")
+    private Long serviceId;
 
     private String remarks;
 

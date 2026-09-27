@@ -35,4 +35,7 @@ public class BillAnnexureRequest {
             message = "Wagons cannot be negative"
     )
     private Integer wagons;
+
+    @DecimalMin(value = "0.0", message = "Weight cannot be negative")
+    private java.math.BigDecimal weight;
 }

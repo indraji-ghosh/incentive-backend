@@ -111,9 +111,9 @@ public class PartyPayableServiceImpl implements PartyPayableService {
             return List.of();
         }
 
-        // Check if Rake specifies performed services
-        List<Long> performedServiceIds = (rake.getServices() != null && !rake.getServices().isEmpty())
-                ? rake.getServices().stream().map(ServiceTypeEntity::getId).toList()
+        // Check if Rake specifies a performed service
+        Long performedServiceId = (rake.getService() != null)
+                ? rake.getService().getId()
                 : null;
 
         List<PartyPayableEntity> generatedPayables = new ArrayList<>();
@@ -143,8 +143,8 @@ public class PartyPayableServiceImpl implements PartyPayableService {
             for (PartyServiceConfigurationEntity config : effectiveConfigs) {
                 Long serviceId = config.getService().getId();
 
-                // If rake specifies performed services, only generate for matching services
-                if (performedServiceIds != null && !performedServiceIds.contains(serviceId)) {
+                // If rake specifies a performed service, only generate for matching service
+                if (performedServiceId != null && !performedServiceId.equals(serviceId)) {
                     continue;
                 }
 
@@ -259,13 +259,21 @@ public class PartyPayableServiceImpl implements PartyPayableService {
         // Aggregate metrics from bill annexures if present
         int annexureCount = (bill.getAnnexures() != null && !bill.getAnnexures().isEmpty()) ? bill.getAnnexures().size() : 1;
         int totalWagons = 0;
+        BigDecimal totalWeight = BigDecimal.ZERO;
         if (bill.getAnnexures() != null) {
             for (BillAnnexureEntity annexure : bill.getAnnexures()) {
                 if (annexure.getWagons() != null) {
                     totalWagons += annexure.getWagons();
                 }
+                if (annexure.getWeight() != null) {
+                    totalWeight = totalWeight.add(annexure.getWeight());
+                }
             }
         }
+
+        Long performedServiceId = (bill.getService() != null)
+                ? bill.getService().getId()
+                : null;
 
         for (PartyAssignmentEntity assignment : assignments) {
             // If bill specified a party, restrict to that party; otherwise apply to all assigned parties
@@ -288,6 +296,13 @@ public class PartyPayableServiceImpl implements PartyPayableService {
             }
 
             for (PartyServiceConfigurationEntity config : effectiveConfigs) {
+                Long serviceId = config.getService().getId();
+
+                // If bill specifies a performed service, only generate for matching service
+                if (performedServiceId != null && !performedServiceId.equals(serviceId)) {
+                    continue;
+                }
+
                 String paymentCode = config.getPaymentType().getCode().toUpperCase();
                 String unitCode = config.getUnit() != null ? config.getUnit().getCode().toUpperCase() : "";
 
@@ -317,8 +332,7 @@ public class PartyPayableServiceImpl implements PartyPayableService {
                 if (paymentCode.contains("WAGON") || unitCode.contains("WAGON")) {
                     quantity = BigDecimal.valueOf(totalWagons > 0 ? totalWagons : 1);
                 } else if (paymentCode.contains("MT") || paymentCode.contains("METRIC") || unitCode.contains("MT") || unitCode.contains("METRIC")) {
-                    // For Bills, weight isn't natively aggregated here easily, defaulting to 1 for MT if not implemented
-                    quantity = BigDecimal.ONE;
+                    quantity = totalWeight.compareTo(BigDecimal.ZERO) > 0 ? totalWeight : BigDecimal.ONE;
                 } else if (paymentCode.contains("RAKE") || unitCode.contains("RAKE")) {
                     quantity = BigDecimal.valueOf(annexureCount > 0 ? annexureCount : 1);
                 } else {

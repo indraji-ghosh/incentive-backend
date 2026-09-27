@@ -19,7 +19,7 @@ public interface RakeEntryMapper {
     @Mapping(target = "client", ignore = true)
     @Mapping(target = "party", ignore = true)
     @Mapping(target = "site", ignore = true)
-    @Mapping(target = "services", ignore = true)
+    @Mapping(target = "service", ignore = true)
     @Mapping(target = "annexures", ignore = true)
     @Mapping(target = "rakeStatus", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
@@ -36,7 +36,7 @@ public interface RakeEntryMapper {
     @Mapping(target = "client", ignore = true)
     @Mapping(target = "party", ignore = true)
     @Mapping(target = "site", ignore = true)
-    @Mapping(target = "services", ignore = true)
+    @Mapping(target = "service", ignore = true)
     @Mapping(target = "annexures", ignore = true)
     @Mapping(target = "rakeStatus", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
@@ -57,17 +57,17 @@ public interface RakeEntryMapper {
     @Mapping(source = "site.siteId", target = "siteId")
     @Mapping(source = "site.siteName", target = "siteName")
     @Mapping(source = "site.siteShortCode", target = "siteShortCode")
-    @Mapping(target = "serviceIds", ignore = true)
-    @Mapping(target = "serviceNames", ignore = true)
+    @Mapping(target = "serviceId", ignore = true)
+    @Mapping(target = "serviceName", ignore = true)
     @Mapping(target = "totalWagons", ignore = true)
     @Mapping(target = "totalWeight", ignore = true)
     RakeEntryResponse toResponse(RakeEntryEntity entity);
 
     @AfterMapping
     default void populateComputedFields(RakeEntryEntity entity, @MappingTarget RakeEntryResponse.RakeEntryResponseBuilder response) {
-        if (entity.getServices() != null) {
-            response.serviceIds(entity.getServices().stream().map(ServiceTypeEntity::getId).toList());
-            response.serviceNames(entity.getServices().stream().map(ServiceTypeEntity::getName).toList());
+        if (entity.getService() != null) {
+            response.serviceId(entity.getService().getId());
+            response.serviceName(entity.getService().getName());
         }
         if (entity.getAnnexures() != null) {
             int wagons = entity.getAnnexures().stream()

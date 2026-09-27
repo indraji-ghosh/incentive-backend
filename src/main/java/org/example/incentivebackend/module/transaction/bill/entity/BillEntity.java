@@ -134,4 +134,13 @@ public class BillEntity extends BaseEntity {
     )
     private List<BillAnnexureEntity> annexures =
             new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "service_id",
+            foreignKey = @ForeignKey(
+                    name = "FK_TX_BILL_SERVICE"
+            )
+    )
+    private org.example.incentivebackend.module.master.servicetype.entity.ServiceTypeEntity service;
 }

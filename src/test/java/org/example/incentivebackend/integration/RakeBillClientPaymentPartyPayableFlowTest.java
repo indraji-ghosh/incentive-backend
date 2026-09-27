@@ -157,8 +157,8 @@ public class RakeBillClientPaymentPartyPayableFlowTest {
     }
 
     @Test
-    @DisplayName("Section 12 Demo Test: Rake RK-2026-0001 creates exactly 4 party payables totalling ₹8,500")
-    void testRakeDemoRK20260001_GeneratesFourPayablesTotalling8500() {
+    @DisplayName("Section 12 Demo Test: Rake RK-2026-0001 with single service creates 2 party payables")
+    void testRakeDemoRK20260001_GeneratesPayablesForSingleService() {
         // Maa Tara: Covering ₹2,200/Rake, Uncovering ₹1,500/Rake, Door Pasting ₹50/Wagon
         PartyServiceConfigurationEntity cfg1 = createConfig(1L, maaTaraAssignment, rakeCoveringService, rakeBased, new BigDecimal("2200.00"));
         PartyServiceConfigurationEntity cfg2 = createConfig(2L, maaTaraAssignment, rakeUncoveringService, rakeBased, new BigDecimal("1500.00"));
@@ -173,7 +173,7 @@ public class RakeBillClientPaymentPartyPayableFlowTest {
         rake.setClient(ultraTech);
         rake.setSite(durgapurSiding);
         rake.setWorkingMonth(LocalDate.of(2026, 9, 5));
-        rake.setServices(List.of(rakeCoveringService, rakeUncoveringService, doorPastingService));
+        rake.setService(rakeCoveringService);
 
         RakeAnnexureEntity ann = new RakeAnnexureEntity();
         ann.setRrDate(LocalDate.of(2026, 9, 5));
@@ -199,32 +199,19 @@ public class RakeBillClientPaymentPartyPayableFlowTest {
         List<PartyPayableEntity> payables = partyPayableService.generatePayablesForRake(rake);
 
         assertNotNull(payables);
-        assertEquals(4, payables.size(), "Must generate exactly 4 Party Payable records");
+        assertEquals(2, payables.size(), "Must generate exactly 2 Party Payable records for the covering service");
 
         BigDecimal total = payables.stream()
                 .map(PartyPayableEntity::getPayableAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        assertEquals(0, new BigDecimal("8500.00").compareTo(total), "Expected total payable = ₹8,500");
+        assertEquals(0, new BigDecimal("4000.00").compareTo(total), "Expected total payable = ₹4,000 (2200 + 1800)");
 
         // Verify Maa Tara Covering: 1 x 2200 = 2200
         PartyPayableEntity p1 = payables.stream()
                 .filter(p -> p.getParty().getId().equals(101L) && p.getService().getId().equals(11L))
                 .findFirst().orElseThrow();
         assertEquals(0, new BigDecimal("2200.00").compareTo(p1.getPayableAmount()));
-
-        // Verify Maa Tara Uncovering: 1 x 1500 = 1500
-        PartyPayableEntity p2 = payables.stream()
-                .filter(p -> p.getParty().getId().equals(101L) && p.getService().getId().equals(12L))
-                .findFirst().orElseThrow();
-        assertEquals(0, new BigDecimal("1500.00").compareTo(p2.getPayableAmount()));
-
-        // Verify Maa Tara Door Pasting: 60 wagons x 50 = 3000
-        PartyPayableEntity p3 = payables.stream()
-                .filter(p -> p.getParty().getId().equals(101L) && p.getService().getId().equals(13L))
-                .findFirst().orElseThrow();
-        assertEquals(0, new BigDecimal("3000.00").compareTo(p3.getPayableAmount()));
-        assertEquals(0, new BigDecimal("60").compareTo(p3.getQuantity()));
 
         // Verify Bengal Covering: 1 x 1800 = 1800
         PartyPayableEntity p4 = payables.stream()

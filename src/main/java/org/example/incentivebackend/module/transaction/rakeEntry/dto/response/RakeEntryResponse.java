@@ -30,8 +30,8 @@ public class RakeEntryResponse {
     private String siteName;
     private String siteShortCode;
 
-    private List<Long> serviceIds;
-    private List<String> serviceNames;
+    private Long serviceId;
+    private String serviceName;
 
     private Integer totalWagons;
     private BigDecimal totalWeight;

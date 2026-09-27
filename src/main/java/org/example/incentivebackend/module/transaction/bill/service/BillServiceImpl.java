@@ -16,6 +16,8 @@ import org.example.incentivebackend.module.transaction.bill.entity.BillAnnexureE
 import org.example.incentivebackend.module.transaction.bill.entity.BillEntity;
 import org.example.incentivebackend.module.transaction.bill.enums.BillPaymentStatus;
 import org.example.incentivebackend.module.transaction.bill.repository.BillRepository;
+import org.example.incentivebackend.module.master.servicetype.entity.ServiceTypeEntity;
+import org.example.incentivebackend.module.master.servicetype.repository.ServiceTypeRepository;
 import org.example.incentivebackend.module.transaction.partyentry.entity.PartyEntryEntity;
 import org.example.incentivebackend.module.transaction.partyentry.repository.PartyEntryRepository;
 import org.example.incentivebackend.module.transaction.partypayable.service.PartyPayableService;
@@ -38,6 +40,7 @@ public class BillServiceImpl implements BillService {
     private final ClientRepository clientRepository;
     private final PartyEntryRepository partyRepository;
     private final SiteRepository siteRepository;
+    private final ServiceTypeRepository serviceTypeRepository;
     private final PartyPayableService partyPayableService;
 
     @Override
@@ -78,10 +81,16 @@ public class BillServiceImpl implements BillService {
                 annexure.setSiding(row.getSiding());
                 annexure.setDestination(row.getDestination());
                 annexure.setWagons(row.getWagons());
+                annexure.setWeight(row.getWeight());
                 annexures.add(annexure);
             }
         }
         bill.setAnnexures(annexures);
+
+        if (request.getServiceId() != null) {
+            bill.setService(serviceTypeRepository.findById(request.getServiceId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Service not found")));
+        }
 
         BillEntity saved = billRepository.save(bill);
 
@@ -155,8 +164,16 @@ public class BillServiceImpl implements BillService {
                 annexure.setSiding(row.getSiding());
                 annexure.setDestination(row.getDestination());
                 annexure.setWagons(row.getWagons());
+                annexure.setWeight(row.getWeight());
                 bill.getAnnexures().add(annexure);
             }
+        }
+
+        if (request.getServiceId() != null) {
+            bill.setService(serviceTypeRepository.findById(request.getServiceId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Service not found")));
+        } else {
+            bill.setService(null);
         }
 
         BillEntity updated = billRepository.save(bill);
@@ -198,6 +215,7 @@ public class BillServiceImpl implements BillService {
                         .siding(row.getSiding())
                         .destination(row.getDestination())
                         .wagons(row.getWagons())
+                        .weight(row.getWeight())
                         .build())
                 .toList();
 
@@ -228,6 +246,8 @@ public class BillServiceImpl implements BillService {
                 .totalRr(rows.size())
                 .totalWagons(totalWagons)
                 .annexures(rows)
+                .serviceId(bill.getService() != null ? bill.getService().getId() : null)
+                .serviceName(bill.getService() != null ? bill.getService().getName() : null)
                 .build();
     }
 

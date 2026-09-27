@@ -71,4 +71,11 @@ public class BillAnnexureEntity {
             nullable = false
     )
     private Integer wagons;
+
+    @Column(
+            name = "weight",
+            precision = 18,
+            scale = 2
+    )
+    private java.math.BigDecimal weight;
 }

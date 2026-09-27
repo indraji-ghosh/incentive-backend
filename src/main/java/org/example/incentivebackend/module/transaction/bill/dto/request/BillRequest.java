@@ -41,4 +41,8 @@ public class BillRequest {
 
     @NotEmpty(message = "At least one annexure row is required")
     private List<@Valid BillAnnexureRequest> annexures;
+
+    @NotEmpty(message = "At least one service is required")
+    @NotNull(message = "Service is required")
+    private Long serviceId;
 }

@@ -47,4 +47,8 @@ public class BillResponse {
     private Integer totalWagons;
 
     private List<BillAnnexureResponse> annexures;
+
+    private Long serviceId;
+    
+    private String serviceName;
 }

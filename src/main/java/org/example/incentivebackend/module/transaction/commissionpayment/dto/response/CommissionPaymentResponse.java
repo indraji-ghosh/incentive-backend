@@ -19,6 +19,15 @@ public class CommissionPaymentResponse {
     private Long createdBy;
     private String paymentType;
     private BigDecimal adjustedAmount;
+    private Long submittedBy;
+    private String submittedByName;
+    private LocalDateTime submittedAt;
+    private LocalDateTime approvedAt;
+    private Long rejectedBy;
+    private String rejectedByName;
+    private LocalDateTime rejectedAt;
+    private String rejectionReason;
+    private org.example.incentivebackend.module.approval.dto.ApprovalDetailsDTO approval;
     private java.util.List<PaymentAllocationResponse> allocations;
 
     @Data

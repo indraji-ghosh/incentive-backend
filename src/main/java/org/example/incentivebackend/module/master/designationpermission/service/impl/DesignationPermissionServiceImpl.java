@@ -58,6 +58,9 @@ public class DesignationPermissionServiceImpl implements DesignationPermissionSe
                         .canEdit(perm.getCanEdit())
                         .canDelete(perm.getCanDelete())
                         .canExport(perm.getCanExport())
+                        .canSubmit(perm.getCanSubmit())
+                        .canApprove(perm.getCanApprove())
+                        .canReject(perm.getCanReject())
                         .build());
             } else {
                 result.add(DesignationPermissionResponseDTO.builder()
@@ -69,6 +72,9 @@ public class DesignationPermissionServiceImpl implements DesignationPermissionSe
                         .canEdit(false)
                         .canDelete(false)
                         .canExport(false)
+                        .canSubmit(false)
+                        .canApprove(false)
+                        .canReject(false)
                         .build());
             }
         }
@@ -91,8 +97,11 @@ public class DesignationPermissionServiceImpl implements DesignationPermissionSe
             boolean canEdit = Boolean.TRUE.equals(reqPerm.getCanEdit());
             boolean canDelete = Boolean.TRUE.equals(reqPerm.getCanDelete());
             boolean canExport = Boolean.TRUE.equals(reqPerm.getCanExport());
+            boolean canSubmit = Boolean.TRUE.equals(reqPerm.getCanSubmit());
+            boolean canApprove = Boolean.TRUE.equals(reqPerm.getCanApprove());
+            boolean canReject = Boolean.TRUE.equals(reqPerm.getCanReject());
 
-            if (canCreate || canEdit || canDelete || canExport) {
+            if (canCreate || canEdit || canDelete || canExport || canSubmit || canApprove || canReject) {
                 canView = true; // Auto-resolve dependency
             }
 
@@ -106,6 +115,9 @@ public class DesignationPermissionServiceImpl implements DesignationPermissionSe
                 entity.setCanEdit(canEdit);
                 entity.setCanDelete(canDelete);
                 entity.setCanExport(canExport);
+                entity.setCanSubmit(canSubmit);
+                entity.setCanApprove(canApprove);
+                entity.setCanReject(canReject);
             } else {
                 entity = DesignationPagePermissionEntity.builder()
                         .designation(designation)
@@ -115,6 +127,9 @@ public class DesignationPermissionServiceImpl implements DesignationPermissionSe
                         .canEdit(canEdit)
                         .canDelete(canDelete)
                         .canExport(canExport)
+                        .canSubmit(canSubmit)
+                        .canApprove(canApprove)
+                        .canReject(canReject)
                         .build();
             }
             permissionRepository.save(entity);
@@ -173,6 +188,9 @@ public class DesignationPermissionServiceImpl implements DesignationPermissionSe
             case "EDIT" -> Boolean.TRUE.equals(entity.getCanEdit());
             case "DELETE" -> Boolean.TRUE.equals(entity.getCanDelete());
             case "EXPORT" -> Boolean.TRUE.equals(entity.getCanExport());
+            case "SUBMIT" -> Boolean.TRUE.equals(entity.getCanSubmit());
+            case "APPROVE" -> Boolean.TRUE.equals(entity.getCanApprove());
+            case "REJECT" -> Boolean.TRUE.equals(entity.getCanReject());
             default -> false;
         };
     }

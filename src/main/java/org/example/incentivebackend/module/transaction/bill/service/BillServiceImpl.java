@@ -42,6 +42,8 @@ public class BillServiceImpl implements BillService {
     private final SiteRepository siteRepository;
     private final ServiceTypeRepository serviceTypeRepository;
     private final PartyPayableService partyPayableService;
+    private final org.example.incentivebackend.common.audit.service.AuditLogService auditLogService;
+    private final org.example.incentivebackend.common.audit.util.AuditHelper auditHelper;
 
     @Override
     public BillResponse create(BillRequest request) {
@@ -97,7 +99,17 @@ public class BillServiceImpl implements BillService {
         // Generate any applicable BILL_BASED party payables
         partyPayableService.generatePayablesForBill(saved);
 
-        return toResponse(saved);
+        BillResponse response = toResponse(saved);
+        
+        auditLogService.createAuditLog(
+            "TRANSACTION", "Bill", "td_bill", saved.getBillId(),
+            org.example.incentivebackend.common.audit.enums.AuditAction.CREATE,
+            null, auditHelper.toJson(response),
+            "Bill created", 1L,
+            saved.getBillNumber(), null, null, null, "SUCCESS"
+        );
+
+        return response;
     }
 
     @Override
@@ -112,6 +124,8 @@ public class BillServiceImpl implements BillService {
     public BillResponse update(Long id, BillRequest request) {
         BillEntity bill = billRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found: " + id));
+                
+        String oldStateJson = auditHelper.toJson(toResponse(bill));
 
         if (!bill.getBillNumber().equalsIgnoreCase(request.getBillNumber())
                 && billRepository.existsByBillNumberIgnoreCase(request.getBillNumber())) {
@@ -152,10 +166,29 @@ public class BillServiceImpl implements BillService {
 
         bill.setRemarks(request.getRemarks());
 
-        bill.getAnnexures().clear();
         if (request.getAnnexures() != null) {
+            java.util.List<Long> requestedIds = request.getAnnexures().stream()
+                    .filter(a -> a.getBillAnnexureId() != null)
+                    .map(BillAnnexureRequest::getBillAnnexureId)
+                    .toList();
+
+            bill.getAnnexures().removeIf(a -> a.getBillAnnexureId() != null && !requestedIds.contains(a.getBillAnnexureId()));
+
             for (BillAnnexureRequest row : request.getAnnexures()) {
-                BillAnnexureEntity annexure = new BillAnnexureEntity();
+                BillAnnexureEntity annexure;
+                if (row.getBillAnnexureId() != null) {
+                    annexure = bill.getAnnexures().stream()
+                            .filter(a -> row.getBillAnnexureId().equals(a.getBillAnnexureId()))
+                            .findFirst()
+                            .orElse(new BillAnnexureEntity());
+                    if (annexure.getBillAnnexureId() == null) {
+                        bill.getAnnexures().add(annexure);
+                    }
+                } else {
+                    annexure = new BillAnnexureEntity();
+                    bill.getAnnexures().add(annexure);
+                }
+                
                 annexure.setBill(bill);
                 annexure.setRrNo(row.getRrNo());
                 annexure.setRrDate(row.getRrDate());
@@ -165,8 +198,9 @@ public class BillServiceImpl implements BillService {
                 annexure.setDestination(row.getDestination());
                 annexure.setWagons(row.getWagons());
                 annexure.setWeight(row.getWeight());
-                bill.getAnnexures().add(annexure);
             }
+        } else {
+            bill.getAnnexures().clear();
         }
 
         if (request.getServiceId() != null) {
@@ -180,7 +214,17 @@ public class BillServiceImpl implements BillService {
         BillEntity target = (updated != null) ? updated : bill;
         partyPayableService.generatePayablesForBill(target);
 
-        return toResponse(target);
+        BillResponse response = toResponse(target);
+        
+        auditLogService.createAuditLog(
+            "TRANSACTION", "Bill", "td_bill", target.getBillId(),
+            org.example.incentivebackend.common.audit.enums.AuditAction.UPDATE,
+            oldStateJson, auditHelper.toJson(response),
+            "Bill updated", 1L,
+            target.getBillNumber(), null, null, null, "SUCCESS"
+        );
+
+        return response;
     }
 
     private void resolveAndSetSite(BillRequest request, BillEntity bill) {
@@ -200,7 +244,17 @@ public class BillServiceImpl implements BillService {
     public void delete(Long id) {
         BillEntity bill = billRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found: " + id));
+                
+        String oldStateJson = auditHelper.toJson(toResponse(bill));
         billRepository.delete(bill);
+        
+        auditLogService.createAuditLog(
+            "TRANSACTION", "Bill", "td_bill", id,
+            org.example.incentivebackend.common.audit.enums.AuditAction.DELETE,
+            oldStateJson, null,
+            "Bill deleted", 1L,
+            bill.getBillNumber(), null, null, null, "SUCCESS"
+        );
     }
 
     private BillResponse toResponse(BillEntity bill) {

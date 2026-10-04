@@ -51,7 +51,7 @@ public class PartyEntryServiceImpl implements PartyEntryService {
     @Override
     public PartyEntryResponse create(PartyEntryRequest request) {
         PartyEntryEntity entity = partyEntryMapper.toEntity(request);
-        entity.setAppStatus(StatusEnum.A.name());
+
         
         mapRelationships(request, entity);
         

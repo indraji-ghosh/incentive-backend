@@ -24,6 +24,8 @@
 
         private final ClientRepository clientRepository;
         private final ClientMapper clientMapper;
+        private final org.example.incentivebackend.common.audit.service.AuditLogService auditLogService;
+        private final org.example.incentivebackend.common.audit.util.AuditHelper auditHelper;
 
         @Override
         public ClientResponse create(ClientRequest request) {
@@ -46,7 +48,17 @@
             ClientEntity saved =
                     clientRepository.save(entity);
 
-            return clientMapper.toResponse(saved);
+            ClientResponse response = clientMapper.toResponse(saved);
+            
+            auditLogService.createAuditLog(
+                "MASTER", "Client", "ms_client", saved.getClientId(),
+                org.example.incentivebackend.common.audit.enums.AuditAction.CREATE,
+                null, auditHelper.toJson(response),
+                "Client created", 1L,
+                saved.getClientShortCode(), null, null, null, "SUCCESS"
+            );
+
+            return response;
         }
 
         @Override
@@ -118,6 +130,8 @@
                                             "Client not found: " + id
                                     )
                             );
+                            
+            String oldStateJson = auditHelper.toJson(clientMapper.toResponse(entity));
 
             if (clientRepository
                     .existsByClientShortCodeAndClientIdNot(
@@ -138,7 +152,17 @@
             ClientEntity updated =
                     clientRepository.save(entity);
 
-            return clientMapper.toResponse(updated);
+            ClientResponse response = clientMapper.toResponse(updated);
+            
+            auditLogService.createAuditLog(
+                "MASTER", "Client", "ms_client", updated.getClientId(),
+                org.example.incentivebackend.common.audit.enums.AuditAction.UPDATE,
+                oldStateJson, auditHelper.toJson(response),
+                "Client updated", 1L,
+                updated.getClientShortCode(), null, null, null, "SUCCESS"
+            );
+
+            return response;
         }
 
         @Override
@@ -152,9 +176,18 @@
                                     )
                             );
 
+            String oldStateJson = auditHelper.toJson(clientMapper.toResponse(entity));
             entity.setClientStatus(StatusEnum.I);
 
-            clientRepository.save(entity);
+            ClientEntity saved = clientRepository.save(entity);
+            
+            auditLogService.createAuditLog(
+                "MASTER", "Client", "ms_client", id,
+                org.example.incentivebackend.common.audit.enums.AuditAction.SOFT_DELETE,
+                oldStateJson, auditHelper.toJson(clientMapper.toResponse(saved)),
+                "Client soft deleted", 1L,
+                saved.getClientShortCode(), null, null, null, "SUCCESS"
+            );
         }
 
         @Override
@@ -168,7 +201,16 @@
                                     )
                             );
 
+            String oldStateJson = auditHelper.toJson(clientMapper.toResponse(entity));
             clientRepository.delete(entity);
+            
+            auditLogService.createAuditLog(
+                "MASTER", "Client", "ms_client", id,
+                org.example.incentivebackend.common.audit.enums.AuditAction.DELETE,
+                oldStateJson, null,
+                "Client hard deleted", 1L,
+                entity.getClientShortCode(), null, null, null, "SUCCESS"
+            );
         }
 
         @Override

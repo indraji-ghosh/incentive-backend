@@ -48,7 +48,7 @@ class AuditLogTest {
         assertEquals("mm_buss_head", saved.getTableName());
         assertEquals(1L, saved.getEntityId());
         assertEquals(AuditAction.CREATE, saved.getAction());
-        assertEquals("{\"headName\":\"Finance\"}", saved.getData());
+        assertEquals("{\"headName\":\"Finance\"}", saved.getNewValues());
         assertEquals(99L, saved.getPerformedBy());
         assertNotNull(saved.getPerformedAt());
     }

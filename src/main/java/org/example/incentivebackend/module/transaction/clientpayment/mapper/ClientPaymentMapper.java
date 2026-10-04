@@ -59,8 +59,8 @@ public class ClientPaymentMapper {
         if (entity.getCreatedAt() != null) {
             response.setCreatedAt(entity.getCreatedAt().toString());
         }
-        if (entity.getModAt() != null) {
-            response.setUpdatedAt(entity.getModAt().toString());
+        if (entity.getCreatedAt() != null) {
+            response.setUpdatedAt(entity.getCreatedAt().toString());
         }
 
         return response;

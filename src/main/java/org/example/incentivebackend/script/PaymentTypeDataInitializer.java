@@ -40,7 +40,6 @@ public class PaymentTypeDataInitializer implements CommandLineRunner {
             entity.setCode(code);
             entity.setName(name);
             entity.setDescription(description);
-            entity.setAppStatus(StatusEnum.A.name());
             paymentTypeRepository.save(entity);
         }
     }

@@ -14,6 +14,8 @@ public class PartyLedgerFilter {
     private LocalDate toDate;
     
     private String transactionType; // Optional filter (e.g. COMMISSION_EARNED, COMMISSION_PAYMENT)
+    private Long clientId;
+    private Long siteId;
     
     private int page = 0;
     private int size = 10;

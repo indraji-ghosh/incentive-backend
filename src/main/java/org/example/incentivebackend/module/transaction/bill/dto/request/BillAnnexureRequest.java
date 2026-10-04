@@ -10,6 +10,8 @@ import java.time.LocalDate;
 @Setter
 public class BillAnnexureRequest {
 
+    private Long billAnnexureId;
+
     @NotBlank(message = "RR number is required")
     @Size(max = 100)
     private String rrNo;

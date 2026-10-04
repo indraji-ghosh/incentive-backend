@@ -89,4 +89,17 @@ public final class ResponseBuilder {
                                 .build()
                 );
     }
+
+    public static <T> ResponseEntity<ApiResponse<T>> error(String message) {
+        return ResponseEntity
+                .badRequest()
+                .body(
+                        ApiResponse.<T>builder()
+                                .success(false)
+                                .message(message)
+                                .data(null)
+                                .timestamp(LocalDateTime.now())
+                                .build()
+                );
+    }
 }

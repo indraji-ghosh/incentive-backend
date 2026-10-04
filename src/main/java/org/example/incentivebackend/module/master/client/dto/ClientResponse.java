@@ -23,13 +23,13 @@ public class ClientResponse {
 
     private Long createdBy;
 
-    private LocalDateTime modAt;
 
-    private Long modBy;
 
-    private String appStatus;
 
-    private Long appBy;
 
-    private LocalDateTime appAt;
+
+
+
+
+
 }

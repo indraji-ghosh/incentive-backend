@@ -46,6 +46,8 @@ public class PartyPayableServiceImpl implements PartyPayableService {
     private final SiteRepository siteRepository;
     private final BillRepository billRepository;
     private final PartyPayableMapper mapper;
+    private final org.example.incentivebackend.common.audit.service.AuditLogService auditLogService;
+    private final org.example.incentivebackend.common.audit.util.AuditHelper auditHelper;
 
     @Override
     public List<PartyPayableEntity> generatePayablesForRake(RakeEntryEntity rake) {
@@ -194,8 +196,16 @@ public class PartyPayableServiceImpl implements PartyPayableService {
                 payable.setTransactionDate(transactionDate);
                 payable.setStatus(StatusEnum.A);
                 payable.setRemarks("Auto-generated for Rake " + sourceId + " (" + paymentCode + ")");
-
                 PartyPayableEntity saved = partyPayableRepository.save(payable);
+                
+                auditLogService.createAuditLog(
+                    "TRANSACTION", "PartyPayable", "td_party_payable", saved.getId(),
+                    org.example.incentivebackend.common.audit.enums.AuditAction.GENERATE,
+                    null, auditHelper.toJson(mapper.toResponse(saved)),
+                    "Auto-generated for Rake", 1L,
+                    saved.getSourceReference(), "RakeEntry", "td_rake_entry", rake.getRakeEntryId(), "SUCCESS"
+                );
+                
                 log.info("Successfully generated Party Payable ID: {} for Party: {} (Amount: ₹{}, Basis: {})",
                         saved.getId(), saved.getParty().getPartyName(), saved.getPayableAmount(), paymentCode);
                 generatedPayables.add(saved);
@@ -356,8 +366,16 @@ public class PartyPayableServiceImpl implements PartyPayableService {
                 payable.setTransactionDate(transactionDate);
                 payable.setStatus(StatusEnum.A);
                 payable.setRemarks("Auto-generated for Bill " + bill.getBillNumber() + " (" + paymentCode + ")");
-
                 PartyPayableEntity saved = partyPayableRepository.save(payable);
+                
+                auditLogService.createAuditLog(
+                    "TRANSACTION", "PartyPayable", "td_party_payable", saved.getId(),
+                    org.example.incentivebackend.common.audit.enums.AuditAction.GENERATE,
+                    null, auditHelper.toJson(mapper.toResponse(saved)),
+                    "Auto-generated for Bill", 1L,
+                    saved.getSourceReference(), "Bill", "td_bill", bill.getBillId(), "SUCCESS"
+                );
+                
                 log.info("Successfully generated Party Payable ID: {} for Party: {} (Amount: ₹{}, Basis: {})",
                         saved.getId(), saved.getParty().getPartyName(), saved.getPayableAmount(), paymentCode);
                 generatedPayables.add(saved);
@@ -406,6 +424,15 @@ public class PartyPayableServiceImpl implements PartyPayableService {
             payable.setRemarks("Fixed monthly payable for period " + periodKey);
 
             PartyPayableEntity saved = partyPayableRepository.save(payable);
+            
+            auditLogService.createAuditLog(
+                "TRANSACTION", "PartyPayable", "td_party_payable", saved.getId(),
+                org.example.incentivebackend.common.audit.enums.AuditAction.GENERATE,
+                null, auditHelper.toJson(mapper.toResponse(saved)),
+                "Auto-generated Monthly Fixed", 1L,
+                saved.getSourceReference(), null, null, null, "SUCCESS"
+            );
+            
             createdPayables.add(saved);
         }
 

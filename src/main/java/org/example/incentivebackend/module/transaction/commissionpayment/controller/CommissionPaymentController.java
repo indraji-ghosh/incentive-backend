@@ -101,4 +101,71 @@ public class CommissionPaymentController {
         commissionPaymentService.delete(id);
         return ResponseBuilder.deleted("Commission Payment");
     }
+
+    @PostMapping("/{id}/submit")
+    public ResponseEntity<ApiResponse<CommissionPaymentResponse>> submit(
+            @PathVariable Long id,
+            @RequestBody(required = false) org.example.incentivebackend.module.approval.dto.ApprovalActionRequestDTO request
+    ) {
+        String remarks = request != null ? request.getRemarks() : null;
+        CommissionPaymentResponse response = commissionPaymentService.submit(id, remarks);
+        return ResponseBuilder.updated("Payment Submitted for Approval", response);
+    }
+
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<CommissionPaymentResponse>> approve(
+            @PathVariable Long id,
+            @RequestBody(required = false) org.example.incentivebackend.module.approval.dto.ApprovalActionRequestDTO request
+    ) {
+        String remarks = request != null ? request.getRemarks() : null;
+        CommissionPaymentResponse response = commissionPaymentService.approve(id, remarks);
+        return ResponseBuilder.updated("Payment Approved", response);
+    }
+
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<ApiResponse<CommissionPaymentResponse>> reject(
+            @PathVariable Long id,
+            @Valid @RequestBody org.example.incentivebackend.module.approval.dto.ApprovalRejectRequestDTO request
+    ) {
+        CommissionPaymentResponse response = commissionPaymentService.reject(id, request.getReason());
+        return ResponseBuilder.updated("Payment Rejected", response);
+    }
+
+    @PostMapping("/{id}/pay")
+    public ResponseEntity<ApiResponse<CommissionPaymentResponse>> pay(
+            @PathVariable Long id
+    ) {
+        CommissionPaymentResponse response = commissionPaymentService.pay(id);
+        return ResponseBuilder.updated("Payment Processed as Paid", response);
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<CommissionPaymentResponse>> cancel(
+            @PathVariable Long id,
+            @RequestBody(required = false) org.example.incentivebackend.module.approval.dto.ApprovalRejectRequestDTO request
+    ) {
+        String reason = request != null ? request.getReason() : "Cancelled by user";
+        CommissionPaymentResponse response = commissionPaymentService.cancel(id, reason);
+        return ResponseBuilder.updated("Payment Cancelled", response);
+    }
+
+    @GetMapping("/{id}/approval")
+    public ResponseEntity<ApiResponse<org.example.incentivebackend.module.approval.dto.ApprovalDetailsDTO>> getApproval(
+            @PathVariable Long id
+    ) {
+        org.example.incentivebackend.module.approval.dto.ApprovalDetailsDTO response = commissionPaymentService.getApproval(id);
+        return ResponseBuilder.fetched("Payment Approval Details", response);
+    }
+
+    @GetMapping("/vouchers")
+    public ResponseEntity<ApiResponse<Page<CommissionPaymentResponse>>> getVouchers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long partyId,
+            @RequestParam(required = false) String search
+    ) {
+        Page<CommissionPaymentResponse> response = commissionPaymentService.getVouchers(page, size, status, partyId, search);
+        return ResponseBuilder.list("Payment Vouchers", response);
+    }
 }

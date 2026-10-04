@@ -39,6 +39,8 @@ public class RakeEntryServiceImpl implements RakeEntryService {
     private final ServiceTypeRepository serviceTypeRepository;
     private final PartyPayableService partyPayableService;
     private final RakeEntryMapper rakeEntryMapper;
+    private final org.example.incentivebackend.common.audit.service.AuditLogService auditLogService;
+    private final org.example.incentivebackend.common.audit.util.AuditHelper auditHelper;
 
     @Override
     public RakeEntryResponse create(RakeEntryRequest request) {
@@ -87,7 +89,17 @@ public class RakeEntryServiceImpl implements RakeEntryService {
         // Auto-generate Party Payables for matching client, site, and services
         partyPayableService.generatePayablesForRake(target);
 
-        return rakeEntryMapper.toResponse(target);
+        RakeEntryResponse response = rakeEntryMapper.toResponse(target);
+        
+        auditLogService.createAuditLog(
+            "TRANSACTION", "RakeEntry", "td_rake_entry", target.getRakeEntryId(),
+            org.example.incentivebackend.common.audit.enums.AuditAction.CREATE,
+            null, auditHelper.toJson(response),
+            "Rake Entry created", 1L,
+            target.getRakeNumber(), null, null, null, "SUCCESS"
+        );
+
+        return response;
     }
 
 
@@ -133,6 +145,8 @@ public class RakeEntryServiceImpl implements RakeEntryService {
     public RakeEntryResponse update(Long id, RakeEntryRequest request) {
         RakeEntryEntity rakeEntry = rakeEntryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rake entry not found"));
+                
+        String oldStateJson = auditHelper.toJson(rakeEntryMapper.toResponse(rakeEntry));
 
         ClientEntity client = clientRepository.findById(request.getClientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
@@ -159,13 +173,35 @@ public class RakeEntryServiceImpl implements RakeEntryService {
                     .orElseThrow(() -> new ResourceNotFoundException("Service not found")));
         }
 
-        rakeEntry.getAnnexures().clear();
         if (request.getAnnexures() != null) {
+            java.util.List<Long> requestedIds = request.getAnnexures().stream()
+                    .filter(a -> a.getRakeAnnexureId() != null)
+                    .map(RakeAnnexureRequest::getRakeAnnexureId)
+                    .toList();
+
+            rakeEntry.getAnnexures().removeIf(a -> a.getRakeAnnexureId() != null && !requestedIds.contains(a.getRakeAnnexureId()));
+
             for (RakeAnnexureRequest annexureReq : request.getAnnexures()) {
-                RakeAnnexureEntity annexure = rakeEntryMapper.toAnnexureEntity(annexureReq);
-                annexure.setRakeEntry(rakeEntry);
-                rakeEntry.getAnnexures().add(annexure);
+                if (annexureReq.getRakeAnnexureId() != null) {
+                    RakeAnnexureEntity existing = rakeEntry.getAnnexures().stream()
+                            .filter(a -> annexureReq.getRakeAnnexureId().equals(a.getRakeAnnexureId()))
+                            .findFirst()
+                            .orElse(null);
+                    if (existing != null) {
+                        rakeEntryMapper.updateAnnexureEntityFromRequest(annexureReq, existing);
+                    } else {
+                        RakeAnnexureEntity annexure = rakeEntryMapper.toAnnexureEntity(annexureReq);
+                        annexure.setRakeEntry(rakeEntry);
+                        rakeEntry.getAnnexures().add(annexure);
+                    }
+                } else {
+                    RakeAnnexureEntity annexure = rakeEntryMapper.toAnnexureEntity(annexureReq);
+                    annexure.setRakeEntry(rakeEntry);
+                    rakeEntry.getAnnexures().add(annexure);
+                }
             }
+        } else {
+            rakeEntry.getAnnexures().clear();
         }
 
         RakeEntryEntity updated = rakeEntryRepository.save(rakeEntry);
@@ -173,7 +209,17 @@ public class RakeEntryServiceImpl implements RakeEntryService {
 
         partyPayableService.generatePayablesForRake(target);
 
-        return rakeEntryMapper.toResponse(target);
+        RakeEntryResponse response = rakeEntryMapper.toResponse(target);
+        
+        auditLogService.createAuditLog(
+            "TRANSACTION", "RakeEntry", "td_rake_entry", target.getRakeEntryId(),
+            org.example.incentivebackend.common.audit.enums.AuditAction.UPDATE,
+            oldStateJson, auditHelper.toJson(response),
+            "Rake Entry updated", 1L,
+            target.getRakeNumber(), null, null, null, "SUCCESS"
+        );
+
+        return response;
     }
 
     private void resolveAndSetSite(RakeEntryRequest request, RakeEntryEntity rakeEntry) {
@@ -193,13 +239,33 @@ public class RakeEntryServiceImpl implements RakeEntryService {
     public void softDelete(Long id) {
         RakeEntryEntity rakeEntry = rakeEntryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rake entry not found"));
+        
+        String oldStateJson = auditHelper.toJson(rakeEntryMapper.toResponse(rakeEntry));
         rakeEntry.setRakeStatus(StatusEnum.I);
+        
+        auditLogService.createAuditLog(
+            "TRANSACTION", "RakeEntry", "td_rake_entry", id,
+            org.example.incentivebackend.common.audit.enums.AuditAction.SOFT_DELETE,
+            oldStateJson, auditHelper.toJson(rakeEntryMapper.toResponse(rakeEntry)),
+            "Rake Entry soft deleted", 1L,
+            rakeEntry.getRakeNumber(), null, null, null, "SUCCESS"
+        );
     }
 
     @Override
     public void hardDelete(Long id) {
         RakeEntryEntity rakeEntry = rakeEntryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rake entry not found"));
+        
+        String oldStateJson = auditHelper.toJson(rakeEntryMapper.toResponse(rakeEntry));
         rakeEntryRepository.delete(rakeEntry);
+        
+        auditLogService.createAuditLog(
+            "TRANSACTION", "RakeEntry", "td_rake_entry", id,
+            org.example.incentivebackend.common.audit.enums.AuditAction.DELETE,
+            oldStateJson, null,
+            "Rake Entry hard deleted", 1L,
+            rakeEntry.getRakeNumber(), null, null, null, "SUCCESS"
+        );
     }
 }

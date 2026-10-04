@@ -16,6 +16,8 @@ public class PartyLedgerEntryResponse {
     private LocalDate ledgerDate;
     private String transactionType; // COMMISSION_EARNED, COMMISSION_PAYMENT
     private String referenceNo;
+    private String clientName;
+    private String siteName;
     private String description;
     private BigDecimal debit;
     private BigDecimal credit;

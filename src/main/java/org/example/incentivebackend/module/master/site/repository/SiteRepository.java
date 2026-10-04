@@ -24,6 +24,8 @@ public interface SiteRepository
 
     java.util.Optional<SiteEntity> findBySiteNameIgnoreCase(String siteName);
 
+    java.util.List<SiteEntity> findBySiteShortCodeIn(java.util.List<String> siteShortCodes);
+
     java.util.Optional<SiteEntity> findBySiteShortCodeIgnoreCase(String siteShortCode);
 
     @Query("""

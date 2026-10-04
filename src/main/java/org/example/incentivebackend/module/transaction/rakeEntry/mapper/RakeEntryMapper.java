@@ -24,12 +24,7 @@ public interface RakeEntryMapper {
     @Mapping(target = "rakeStatus", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "modNo", ignore = true)
-    @Mapping(target = "modBy", ignore = true)
-    @Mapping(target = "modAt", ignore = true)
-    @Mapping(target = "appStatus", ignore = true)
-    @Mapping(target = "appBy", ignore = true)
-    @Mapping(target = "appAt", ignore = true)
+
     RakeEntryEntity toEntity(RakeEntryRequest request);
 
     @Mapping(target = "rakeEntryId", ignore = true)
@@ -41,12 +36,7 @@ public interface RakeEntryMapper {
     @Mapping(target = "rakeStatus", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "modNo", ignore = true)
-    @Mapping(target = "modBy", ignore = true)
-    @Mapping(target = "modAt", ignore = true)
-    @Mapping(target = "appStatus", ignore = true)
-    @Mapping(target = "appBy", ignore = true)
-    @Mapping(target = "appAt", ignore = true)
+
     void updateEntityFromRequest(RakeEntryRequest request, @MappingTarget RakeEntryEntity entity);
 
     @Mapping(source = "client.clientId", target = "clientId")
@@ -82,11 +72,9 @@ public interface RakeEntryMapper {
         }
     }
 
-    @Mapping(target = "rakeAnnexureId", ignore = true)
     @Mapping(target = "rakeEntry", ignore = true)
     RakeAnnexureEntity toAnnexureEntity(RakeAnnexureRequest request);
 
-    @Mapping(target = "rakeAnnexureId", ignore = true)
     @Mapping(target = "rakeEntry", ignore = true)
     void updateAnnexureEntityFromRequest(RakeAnnexureRequest request, @MappingTarget RakeAnnexureEntity entity);
 

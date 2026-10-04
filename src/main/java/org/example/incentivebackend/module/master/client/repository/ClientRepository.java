@@ -25,6 +25,10 @@ public interface ClientRepository
             String clientShortCode
     );
 
+    java.util.List<ClientEntity> findByClientShortCodeIn(
+            java.util.List<String> clientShortCodes
+    );
+
     @Query("""
             SELECT c
             FROM ClientEntity c

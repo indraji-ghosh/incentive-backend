@@ -26,6 +26,8 @@ public class SiteServiceImpl implements SiteService {
 
     private final SiteRepository siteRepository;
     private final SiteMapper siteMapper;
+    private final org.example.incentivebackend.common.audit.service.AuditLogService auditLogService;
+    private final org.example.incentivebackend.common.audit.util.AuditHelper auditHelper;
 
     @Override
     public SiteResponse create(SiteRequest request) {
@@ -48,7 +50,17 @@ public class SiteServiceImpl implements SiteService {
         SiteEntity saved =
                 siteRepository.save(entity);
 
-        return siteMapper.toResponse(saved);
+        SiteResponse response = siteMapper.toResponse(saved);
+        
+        auditLogService.createAuditLog(
+            "MASTER", "Site", "ms_site", saved.getSiteId(),
+            org.example.incentivebackend.common.audit.enums.AuditAction.CREATE,
+            null, auditHelper.toJson(response),
+            "Site created", 1L,
+            saved.getSiteShortCode(), null, null, null, "SUCCESS"
+        );
+
+        return response;
     }
 
     @Override
@@ -121,6 +133,8 @@ public class SiteServiceImpl implements SiteService {
                                         "Site not found: " + id
                                 )
                         );
+                        
+        String oldStateJson = auditHelper.toJson(siteMapper.toResponse(entity));
 
         if (siteRepository
                 .existsBySiteShortCodeIgnoreCaseAndSiteIdNot(
@@ -141,7 +155,17 @@ public class SiteServiceImpl implements SiteService {
         SiteEntity updated =
                 siteRepository.save(entity);
 
-        return siteMapper.toResponse(updated);
+        SiteResponse response = siteMapper.toResponse(updated);
+        
+        auditLogService.createAuditLog(
+            "MASTER", "Site", "ms_site", updated.getSiteId(),
+            org.example.incentivebackend.common.audit.enums.AuditAction.UPDATE,
+            oldStateJson, auditHelper.toJson(response),
+            "Site updated", 1L,
+            updated.getSiteShortCode(), null, null, null, "SUCCESS"
+        );
+
+        return response;
     }
 
     @Override
@@ -155,9 +179,18 @@ public class SiteServiceImpl implements SiteService {
                                 )
                         );
 
+        String oldStateJson = auditHelper.toJson(siteMapper.toResponse(entity));
         entity.setSiteStatus(StatusEnum.I);
 
-        siteRepository.save(entity);
+        SiteEntity saved = siteRepository.save(entity);
+        
+        auditLogService.createAuditLog(
+            "MASTER", "Site", "ms_site", id,
+            org.example.incentivebackend.common.audit.enums.AuditAction.SOFT_DELETE,
+            oldStateJson, auditHelper.toJson(siteMapper.toResponse(saved)),
+            "Site soft deleted", 1L,
+            saved.getSiteShortCode(), null, null, null, "SUCCESS"
+        );
     }
 
     @Override
@@ -171,7 +204,16 @@ public class SiteServiceImpl implements SiteService {
                                 )
                         );
 
+        String oldStateJson = auditHelper.toJson(siteMapper.toResponse(entity));
         siteRepository.delete(entity);
+        
+        auditLogService.createAuditLog(
+            "MASTER", "Site", "ms_site", id,
+            org.example.incentivebackend.common.audit.enums.AuditAction.DELETE,
+            oldStateJson, null,
+            "Site hard deleted", 1L,
+            entity.getSiteShortCode(), null, null, null, "SUCCESS"
+        );
     }
 
     @Override

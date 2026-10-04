@@ -47,4 +47,27 @@ public class CommissionPaymentEntity extends BaseEntity {
 
     @Column(name = "adjusted_amount", precision = 19, scale = 2)
     private BigDecimal adjustedAmount = BigDecimal.ZERO;
+
+    @Column(name = "submitted_by")
+    private Long submittedBy;
+
+    @Column(name = "submitted_at")
+    private java.time.LocalDateTime submittedAt;
+
+    @Column(name = "approved_at")
+    private java.time.LocalDateTime approvedAt;
+
+    @Column(name = "rejected_by")
+    private Long rejectedBy;
+
+    @Column(name = "rejected_at")
+    private java.time.LocalDateTime rejectedAt;
+
+    @Column(name = "rejection_reason", length = 1000)
+    private String rejectionReason;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
 }
+

@@ -21,7 +21,7 @@ public class PartyEntryResponse {
     private LocalDate effectiveFrom;
     private LocalDate effectiveTo;
     private String remarks;
-    private String appStatus;
+
     
     // Payment Information
     private String accountHolderName;
@@ -38,10 +38,10 @@ public class PartyEntryResponse {
     // Auditing fields
     private LocalDateTime createdAt;
     private Long createdBy;
-    private LocalDateTime modAt;
-    private Long modBy;
-    private LocalDateTime appAt;
-    private Long appBy;
+
+
+
+
 
     // Simple nested DTOs for referencing Master Data
     @Getter @Setter @Builder

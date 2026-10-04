@@ -20,4 +20,13 @@ public interface CommissionPaymentService {
     CommissionPaymentResponse createAdvancePayment(CommissionPaymentRequest request);
     CommissionPaymentResponse adjustAdvance(Long partyId, Long payableId, BigDecimal adjustmentAmount);
     BigDecimal getAvailableAdvanceBalance(Long partyId);
+
+    // Approval Operations
+    CommissionPaymentResponse submit(Long id, String remarks);
+    CommissionPaymentResponse approve(Long id, String remarks);
+    CommissionPaymentResponse reject(Long id, String reason);
+    CommissionPaymentResponse pay(Long id);
+    CommissionPaymentResponse cancel(Long id, String reason);
+    org.example.incentivebackend.module.approval.dto.ApprovalDetailsDTO getApproval(Long id);
+    Page<CommissionPaymentResponse> getVouchers(int page, int size, String status, Long partyId, String search);
 }

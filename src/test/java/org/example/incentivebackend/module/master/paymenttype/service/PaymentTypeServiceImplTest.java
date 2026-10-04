@@ -131,11 +131,11 @@ class PaymentTypeServiceImplTest {
         e1.setId(1L);
         e1.setCode("C1");
         e1.setName("N1");
-        e1.setAppStatus(StatusEnum.A.name());
+
 
         PaymentTypeEntity e2 = new PaymentTypeEntity();
         e2.setId(2L);
-        e2.setAppStatus(StatusEnum.I.name());
+
 
         when(paymentTypeRepository.findAll()).thenReturn(List.of(e1, e2));
 

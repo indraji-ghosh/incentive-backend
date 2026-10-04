@@ -12,11 +12,11 @@ public class PaymentTypeResponse {
     private String code;
     private String name;
     private String description;
-    private String appStatus;
+
     private LocalDateTime createdAt;
     private Long createdBy;
-    private LocalDateTime modAt;
-    private Long modBy;
-    private LocalDateTime appAt;
-    private Long appBy;
+
+
+
+
 }

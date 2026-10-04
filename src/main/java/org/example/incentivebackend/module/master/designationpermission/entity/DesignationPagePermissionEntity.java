@@ -53,4 +53,17 @@ public class DesignationPagePermissionEntity extends BaseEntity {
     @Column(name = "can_export", nullable = false)
     @Builder.Default
     private Boolean canExport = false;
+
+    @Column(name = "can_submit", nullable = false)
+    @Builder.Default
+    private Boolean canSubmit = false;
+
+    @Column(name = "can_approve", nullable = false)
+    @Builder.Default
+    private Boolean canApprove = false;
+
+    @Column(name = "can_reject", nullable = false)
+    @Builder.Default
+    private Boolean canReject = false;
 }
+

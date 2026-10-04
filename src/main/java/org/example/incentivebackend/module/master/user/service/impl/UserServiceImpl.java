@@ -24,6 +24,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final DesignationRepository designationRepository;
     private final PasswordEncoder passwordEncoder;
+    private final org.example.incentivebackend.common.audit.service.AuditLogService auditLogService;
+    private final org.example.incentivebackend.common.audit.util.AuditHelper auditHelper;
 
     @Override
     public List<UserResponseDTO> getAllUsers() {
@@ -59,13 +61,26 @@ public class UserServiceImpl implements UserService {
             entity.setDesignation(desig);
         }
         
-        return mapToDTO(userRepository.save(entity));
+        UserEntity saved = userRepository.save(entity);
+        UserResponseDTO response = mapToDTO(saved);
+        
+        auditLogService.createAuditLog(
+            "MASTER", "User", "ms_users", saved.getUserId(),
+            org.example.incentivebackend.common.audit.enums.AuditAction.CREATE,
+            null, auditHelper.toJson(response),
+            "User created", 1L,
+            saved.getUsername(), null, null, null, "SUCCESS"
+        );
+
+        return response;
     }
 
     @Override
     public UserResponseDTO updateUser(Long id, UserRequestDTO request) {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                
+        String oldStateJson = auditHelper.toJson(mapToDTO(entity));
                 
         if (!entity.getUsername().equalsIgnoreCase(request.getUsername()) && 
             userRepository.existsByUsername(request.getUsername())) {
@@ -92,15 +107,35 @@ public class UserServiceImpl implements UserService {
             entity.setDesignation(null);
         }
         
-        return mapToDTO(userRepository.save(entity));
+        UserEntity saved = userRepository.save(entity);
+        UserResponseDTO response = mapToDTO(saved);
+        
+        auditLogService.createAuditLog(
+            "MASTER", "User", "ms_users", saved.getUserId(),
+            org.example.incentivebackend.common.audit.enums.AuditAction.UPDATE,
+            oldStateJson, auditHelper.toJson(response),
+            "User updated", 1L,
+            saved.getUsername(), null, null, null, "SUCCESS"
+        );
+
+        return response;
     }
 
     @Override
     public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("User not found");
-        }
+        UserEntity entity = userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            
+        String oldStateJson = auditHelper.toJson(mapToDTO(entity));
         userRepository.deleteById(id);
+        
+        auditLogService.createAuditLog(
+            "MASTER", "User", "ms_users", id,
+            org.example.incentivebackend.common.audit.enums.AuditAction.DELETE,
+            oldStateJson, null,
+            "User deleted", 1L,
+            entity.getUsername(), null, null, null, "SUCCESS"
+        );
     }
 
     private UserResponseDTO mapToDTO(UserEntity entity) {

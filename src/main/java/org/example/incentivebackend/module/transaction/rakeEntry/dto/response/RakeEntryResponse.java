@@ -43,7 +43,7 @@ public class RakeEntryResponse {
 
     private LocalDateTime createdAt;
     private String createdBy;
-    private Integer modNo;
-    private String modBy;
-    private LocalDateTime modAt;
+
+
+
 }

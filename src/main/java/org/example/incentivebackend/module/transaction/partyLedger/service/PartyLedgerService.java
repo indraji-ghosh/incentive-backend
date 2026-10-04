@@ -25,6 +25,8 @@ import org.example.incentivebackend.module.transaction.partypayable.repository.P
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -63,108 +65,128 @@ public class PartyLedgerService {
                 .build();
     }
 
+    private boolean isClientSiteMatch(PartyPayableEntity payable, PartyLedgerFilter filter) {
+        if (filter.getClientId() != null && !payable.getPartyAssignment().getClient().getClientId().equals(filter.getClientId())) {
+            return false;
+        }
+        if (filter.getSiteId() != null && !payable.getPartyAssignment().getSite().getSiteId().equals(filter.getSiteId())) {
+            return false;
+        }
+        return true;
+    }
+
     @Transactional(readOnly = true)
     public PartyLedgerResponse getPartyLedger(Long partyId, PartyLedgerFilter filter) {
         PartyEntity party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Party not found: " + partyId));
 
-        BigDecimal totalEarned = commissionCalculationService.getTotalCommissionEarned(partyId);
-        if (totalEarned == null) {
-            totalEarned = BigDecimal.ZERO;
-        }
-
-        List<CommissionPaymentEntity> payments = commissionPaymentRepository.findByParty_IdAndStatusOrderByPaymentDateDescCommissionPaymentIdDesc(partyId, "ACTIVE");
+        List<CommissionPaymentEntity> payments = commissionPaymentRepository.findByParty_IdAndStatusInOrderByPaymentDateDescCommissionPaymentIdDesc(partyId, List.of("PAID", "ACTIVE"));
         List<PartyPayableEntity> payables = partyPayableRepository.findByParty_IdAndStatus(partyId, StatusEnum.A);
         List<PartyPaymentAdjustmentEntity> adjustments = partyPaymentAdjustmentRepository.findByCommissionPayment_Party_Id(partyId);
         
         List<PartyLedgerEntryResponse> allEntries = new ArrayList<>();
 
-        if (!payables.isEmpty()) {
-            for (PartyPayableEntity payable : payables) {
+        BigDecimal calculatedTotalEarned = BigDecimal.ZERO;
+        BigDecimal calculatedTotalPaid = BigDecimal.ZERO;
+
+        for (PartyPayableEntity payable : payables) {
+            if (isClientSiteMatch(payable, filter)) {
                 allEntries.add(PartyLedgerEntryResponse.builder()
                         .ledgerDate(payable.getTransactionDate())
                         .transactionType("PARTY_PAYABLE")
                         .referenceNo(payable.getSourceReference() != null ? payable.getSourceReference() : payable.getSourceType() + "-" + payable.getSourceId())
+                        .clientName(payable.getPartyAssignment().getClient().getClientName())
+                        .siteName(payable.getPartyAssignment().getSite().getSiteName())
                         .description((payable.getService() != null ? payable.getService().getName() : "Service") + " (" + payable.getCalculationBasis() + ")")
                         .debit(BigDecimal.ZERO)
                         .credit(payable.getPayableAmount())
                         .amount(payable.getPayableAmount())
                         .build());
+                calculatedTotalEarned = calculatedTotalEarned.add(payable.getPayableAmount());
             }
-        } else if (totalEarned.compareTo(BigDecimal.ZERO) > 0) {
-            allEntries.add(PartyLedgerEntryResponse.builder()
-                    .ledgerDate(party.getCreatedAt() != null ? party.getCreatedAt().toLocalDate() : LocalDate.of(2000, 1, 1))
-                    .transactionType("COMMISSION_EARNED")
-                    .referenceNo("COMM-TOTAL")
-                    .description("Total Commission Earned")
-                    .debit(BigDecimal.ZERO)
-                    .credit(totalEarned)
-                    .amount(totalEarned)
-                    .build());
         }
 
         for (CommissionPaymentEntity payment : payments) {
             if ("ADVANCE_PAYMENT".equals(payment.getPaymentType())) {
-                allEntries.add(PartyLedgerEntryResponse.builder()
-                        .ledgerDate(payment.getPaymentDate())
-                        .transactionType("ADVANCE_PAYMENT")
-                        .referenceNo(payment.getPaymentNo())
-                        .description(payment.getRemarks() != null ? payment.getRemarks() : "Advance Payment")
-                        .debit(BigDecimal.ZERO) // Does not reduce payable balance
-                        .credit(BigDecimal.ZERO)
-                        .amount(payment.getPaymentAmount())
-                        .build());
+                if (filter.getClientId() == null) {
+                    allEntries.add(PartyLedgerEntryResponse.builder()
+                            .ledgerDate(payment.getPaymentDate())
+                            .transactionType("ADVANCE_PAYMENT")
+                            .referenceNo(payment.getPaymentNo())
+                            .description(payment.getRemarks() != null ? payment.getRemarks() : "Advance Payment")
+                            .debit(BigDecimal.ZERO)
+                            .credit(BigDecimal.ZERO)
+                            .amount(payment.getPaymentAmount())
+                            .build());
+                }
             } else {
-                String desc = payment.getRemarks() != null ? payment.getRemarks() : "Commission Payment";
                 List<PartyPaymentAdjustmentEntity> allocs = adjustments.stream()
                         .filter(a -> a.getCommissionPayment().getCommissionPaymentId().equals(payment.getCommissionPaymentId()))
+                        .filter(a -> isClientSiteMatch(a.getPayable(), filter))
                         .collect(Collectors.toList());
+                
                 if (!allocs.isEmpty()) {
-                    desc = "Against: " + allocs.stream()
+                    BigDecimal allocatedAmount = allocs.stream().map(PartyPaymentAdjustmentEntity::getAdjustedAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+                    calculatedTotalPaid = calculatedTotalPaid.add(allocatedAmount);
+                    
+                    String desc = "Against: " + allocs.stream()
                             .map(a -> (a.getPayable().getSourceReference() != null ? a.getPayable().getSourceReference() : a.getPayable().getSourceId()) + " -> " + a.getAdjustedAmount())
                             .collect(Collectors.joining(", "));
-                }
 
-                allEntries.add(PartyLedgerEntryResponse.builder()
-                        .ledgerDate(payment.getPaymentDate())
-                        .transactionType("COMMISSION_PAYMENT")
-                        .referenceNo(payment.getPaymentNo())
-                        .description(desc)
-                        .debit(payment.getPaymentAmount())
-                        .credit(BigDecimal.ZERO)
-                        .amount(payment.getPaymentAmount())
-                        .build());
+                    allEntries.add(PartyLedgerEntryResponse.builder()
+                            .ledgerDate(payment.getPaymentDate())
+                            .transactionType("COMMISSION_PAYMENT")
+                            .referenceNo(payment.getPaymentNo())
+                            .clientName(allocs.get(0).getPayable().getPartyAssignment().getClient().getClientName())
+                            .siteName(allocs.get(0).getPayable().getPartyAssignment().getSite().getSiteName())
+                            .description(desc)
+                            .debit(allocatedAmount)
+                            .credit(BigDecimal.ZERO)
+                            .amount(allocatedAmount)
+                            .build());
+                } else if (filter.getClientId() == null) {
+                    allEntries.add(PartyLedgerEntryResponse.builder()
+                            .ledgerDate(payment.getPaymentDate())
+                            .transactionType("COMMISSION_PAYMENT")
+                            .referenceNo(payment.getPaymentNo())
+                            .description(payment.getRemarks() != null ? payment.getRemarks() : "Unallocated Commission Payment")
+                            .debit(payment.getPaymentAmount())
+                            .credit(BigDecimal.ZERO)
+                            .amount(payment.getPaymentAmount())
+                            .build());
+                    calculatedTotalPaid = calculatedTotalPaid.add(payment.getPaymentAmount());
+                }
             }
         }
 
         for (PartyPaymentAdjustmentEntity adj : adjustments) {
             if (adj.getCommissionPayment() != null && "ADVANCE_PAYMENT".equals(adj.getCommissionPayment().getPaymentType())) {
-                allEntries.add(PartyLedgerEntryResponse.builder()
-                        .ledgerDate(adj.getCreatedAt() != null ? adj.getCreatedAt().toLocalDate() : LocalDate.now())
-                        .transactionType("ADVANCE_ADJUSTMENT")
-                        .referenceNo("ADJ-" + adj.getAdjustmentId())
-                        .description("Advance Adjusted against Payable #" + adj.getPayable().getId())
-                        .debit(adj.getAdjustedAmount()) // This reduces the payable balance
-                        .credit(BigDecimal.ZERO)
-                        .amount(adj.getAdjustedAmount())
-                        .build());
+                if (isClientSiteMatch(adj.getPayable(), filter)) {
+                    allEntries.add(PartyLedgerEntryResponse.builder()
+                            .ledgerDate(adj.getCreatedAt() != null ? adj.getCreatedAt().toLocalDate() : LocalDate.now())
+                            .transactionType("ADVANCE_ADJUSTMENT")
+                            .referenceNo("ADJ-" + adj.getAdjustmentId())
+                            .clientName(adj.getPayable().getPartyAssignment().getClient().getClientName())
+                            .siteName(adj.getPayable().getPartyAssignment().getSite().getSiteName())
+                            .description("Advance Adjusted against Payable #" + adj.getPayable().getId())
+                            .debit(adj.getAdjustedAmount())
+                            .credit(BigDecimal.ZERO)
+                            .amount(adj.getAdjustedAmount())
+                            .build());
+                    calculatedTotalPaid = calculatedTotalPaid.add(adj.getAdjustedAmount());
+                }
             }
         }
 
-        // Sort chronologically
         allEntries.sort(Comparator.comparing(PartyLedgerEntryResponse::getLedgerDate)
                 .thenComparing(PartyLedgerEntryResponse::getTransactionType)
                 .thenComparing(PartyLedgerEntryResponse::getReferenceNo, Comparator.nullsLast(String::compareTo)));
 
         BigDecimal balance = BigDecimal.ZERO;
-        BigDecimal calculatedTotalDebit = BigDecimal.ZERO;
-        BigDecimal calculatedTotalCredit = BigDecimal.ZERO;
 
         for (PartyLedgerEntryResponse entry : allEntries) {
             balance = balance.add(entry.getCredit()).subtract(entry.getDebit());
             entry.setBalance(balance);
-            calculatedTotalDebit = calculatedTotalDebit.add(entry.getDebit());
-            calculatedTotalCredit = calculatedTotalCredit.add(entry.getCredit());
         }
 
         List<PartyLedgerEntryResponse> filteredEntries = allEntries.stream()
@@ -190,9 +212,9 @@ public class PartyLedgerService {
         return PartyLedgerResponse.builder()
                 .partyId(party.getId())
                 .partyName(party.getPartyName())
-                .totalCommissionEarned(calculatedTotalCredit)
-                .totalCommissionPaid(calculatedTotalDebit)
-                .outstandingCommission(calculatedTotalCredit.subtract(calculatedTotalDebit))
+                .totalCommissionEarned(calculatedTotalEarned)
+                .totalCommissionPaid(calculatedTotalPaid)
+                .outstandingCommission(calculatedTotalEarned.subtract(calculatedTotalPaid))
                 .entries(pagedEntries)
                 .build();
     }

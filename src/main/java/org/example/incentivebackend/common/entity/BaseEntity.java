@@ -21,23 +21,11 @@ public class BaseEntity {
     @Column(name = "created_by", updatable = false, nullable = true)
     private Long createdBy;
 
-    @Column(name = "mod_no")
-    private Integer modNo = 0;
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @LastModifiedBy
-    @Column(name = "mod_by")
-    private Long modBy;
-
-    @LastModifiedDate
-    @Column(name = "mod_at")
-    private LocalDateTime modAt;
-
-    @Column(name = "app_status")
-    private String appStatus;
-
-    @Column(name = "app_by")
-    private Long appBy;
-
-    @Column(name = "app_at")
-    private LocalDateTime appAt;
+    @Column(name = "updated_by")
+    private Long updatedBy;
 }

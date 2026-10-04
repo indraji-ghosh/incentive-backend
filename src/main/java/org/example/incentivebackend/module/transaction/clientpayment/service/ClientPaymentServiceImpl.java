@@ -32,6 +32,8 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
     private final BillRepository billRepository;
     private final ClientPaymentMapper clientPaymentMapper;
     private final PartyPayableService partyPayableService;
+    private final org.example.incentivebackend.common.audit.service.AuditLogService auditLogService;
+    private final org.example.incentivebackend.common.audit.util.AuditHelper auditHelper;
 
     @Override
     @Transactional
@@ -59,7 +61,17 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
         payment = clientPaymentRepository.save(payment);
         updateBillPaymentStatus(bill);
 
-        return clientPaymentMapper.toResponse(payment);
+        ClientPaymentResponse response = clientPaymentMapper.toResponse(payment);
+        
+        auditLogService.createAuditLog(
+            "TRANSACTION", "ClientPayment", "tx_client_payment", payment.getClientPaymentId(),
+            org.example.incentivebackend.common.audit.enums.AuditAction.CREATE,
+            null, auditHelper.toJson(response),
+            "Client Payment created", 1L,
+            payment.getPaymentNo(), "Bill", "td_bill", bill.getBillId(), "SUCCESS"
+        );
+
+        return response;
     }
 
     @Override
@@ -68,6 +80,7 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
         ClientPaymentEntity payment = clientPaymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with ID: " + id));
 
+        String oldStateJson = auditHelper.toJson(clientPaymentMapper.toResponse(payment));
         BillEntity bill = payment.getBill();
         
         BigDecimal totalPaidExcludingCurrent = clientPaymentRepository.getTotalPaidAmountByBillIdExcluding(
@@ -88,7 +101,17 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
         payment = clientPaymentRepository.save(payment);
         updateBillPaymentStatus(bill);
 
-        return clientPaymentMapper.toResponse(payment);
+        ClientPaymentResponse response = clientPaymentMapper.toResponse(payment);
+        
+        auditLogService.createAuditLog(
+            "TRANSACTION", "ClientPayment", "tx_client_payment", payment.getClientPaymentId(),
+            org.example.incentivebackend.common.audit.enums.AuditAction.UPDATE,
+            oldStateJson, auditHelper.toJson(response),
+            "Client Payment updated", 1L,
+            payment.getPaymentNo(), "Bill", "td_bill", bill.getBillId(), "SUCCESS"
+        );
+
+        return response;
     }
 
     @Override
@@ -110,11 +133,21 @@ public class ClientPaymentServiceImpl implements ClientPaymentService {
     public void deletePayment(Long id) {
         ClientPaymentEntity payment = clientPaymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with ID: " + id));
+                
+        String oldStateJson = auditHelper.toJson(clientPaymentMapper.toResponse(payment));
         payment.setPaymentStatus(StatusEnum.I);
         clientPaymentRepository.save(payment);
         if (payment.getBill() != null) {
             updateBillPaymentStatus(payment.getBill());
         }
+        
+        auditLogService.createAuditLog(
+            "TRANSACTION", "ClientPayment", "tx_client_payment", id,
+            org.example.incentivebackend.common.audit.enums.AuditAction.DELETE,
+            oldStateJson, auditHelper.toJson(clientPaymentMapper.toResponse(payment)),
+            "Client Payment deleted", 1L,
+            payment.getPaymentNo(), "Bill", "td_bill", payment.getBill() != null ? payment.getBill().getBillId() : null, "SUCCESS"
+        );
     }
 
     @Override

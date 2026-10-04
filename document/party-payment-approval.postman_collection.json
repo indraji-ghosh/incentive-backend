@@ -1,0 +1,692 @@
+{
+  "info": {
+    "_postman_id": "9f7b11c4-2e55-4d0a-b3e8-78a0d9e1124f",
+    "name": "Incentive ERP - Party Payment Approval Workflow",
+    "description": "Comprehensive Postman test collection for the Multi-Level Multi-User Approval System in Incentive ERP.\n\nDemonstrates:\n1. Authentication of personas (Submitter, Level 1 Approvers, Level 2 Approver, Level 3 Approver)\n2. Draft Payment creation (Non-posting)\n3. Voucher submission\n4. Negative test: Maker-checker restriction (submitter cannot approve)\n5. Negative test: Out-of-order early approval by Level 2\n6. Level 1 single approver approval ('ANY ONE' rule)\n7. Negative test: Level 1 duplicate approval attempt by alternate approver\n8. Level 2 approval\n9. Level 3 approval\n10. Final payment disbursement & financial ledger posting\n11. Rejection & resubmission flow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api",
+      "type": "string"
+    },
+    {
+      "key": "paymentId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "token_submitter",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_l1_a",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_l1_b",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_l2_a",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_l3_a",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Authentication",
+      "item": [
+        {
+          "name": "Login - Submitter (rahul_exec)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set('token_submitter', jsonData.data.accessToken);",
+                  "    console.log('Saved token_submitter');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"rahul_exec\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Level 1 Approver A (manager_a)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set('token_l1_a', jsonData.data.accessToken);",
+                  "    console.log('Saved token_l1_a');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"manager_a\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Level 1 Approver B (manager_b)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set('token_l1_b', jsonData.data.accessToken);",
+                  "    console.log('Saved token_l1_b');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"manager_b\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Level 2 Approver (finance_head)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set('token_l2_a', jsonData.data.accessToken);",
+                  "    console.log('Saved token_l2_a');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"finance_head\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Level 3 Approver (director_priya)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set('token_l3_a', jsonData.data.accessToken);",
+                  "    console.log('Saved token_l3_a');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"director_priya\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Happy Path Approval Workflow",
+      "item": [
+        {
+          "name": "Step 1: Create Draft Party Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Status is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Voucher status is DRAFT', function () {",
+                  "    pm.expect(jsonData.data.status).to.eql('DRAFT');",
+                  "});",
+                  "if (jsonData.data && jsonData.data.commissionPaymentId) {",
+                  "    pm.collectionVariables.set('paymentId', jsonData.data.commissionPaymentId);",
+                  "    console.log('Saved paymentId: ' + jsonData.data.commissionPaymentId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_submitter}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partyId\": 1,\n  \"paymentAmount\": 50000.00,\n  \"paymentDate\": \"2026-09-30\",\n  \"paymentMethod\": \"BANK_TRANSFER\",\n  \"remarks\": \"Test vendor settlement payment\",\n  \"allocations\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transaction/commission-payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["transaction", "commission-payments"]
+            }
+          }
+        },
+        {
+          "name": "Step 2: Submit Payment Voucher for Approval",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Status is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Voucher status is PENDING_APPROVAL', function () {",
+                  "    pm.expect(jsonData.data.status).to.eql('PENDING_APPROVAL');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_submitter}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remarks\": \"Submitted by operations executive for processing\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transaction/commission-payments/{{paymentId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["transaction", "commission-payments", "{{paymentId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Step 3: Negative Test - Submitter Cannot Self-Approve (Maker-Checker)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expect 400 Bad Request or 403 Forbidden', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 403]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_submitter}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remarks\": \"Attempting to self-approve\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transaction/commission-payments/{{paymentId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["transaction", "commission-payments", "{{paymentId}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Step 4: Negative Test - Early Level 2 Approval Blocked",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expect 400 Bad Request or 403 Forbidden', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 403]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_l2_a}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remarks\": \"Premature Level 2 approval\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transaction/commission-payments/{{paymentId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["transaction", "commission-payments", "{{paymentId}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Step 5: Approve Level 1 by manager_a (ANY ONE Rule)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Status is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Voucher remains PENDING_APPROVAL while Level 2 is activated', function () {",
+                  "    pm.expect(jsonData.data.status).to.eql('PENDING_APPROVAL');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_l1_a}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remarks\": \"Site Manager approved. Field operations verified.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transaction/commission-payments/{{paymentId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["transaction", "commission-payments", "{{paymentId}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Step 6: Negative Test - Duplicate Level 1 Approval by manager_b Blocked",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expect 400 Bad Request', function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_l1_b}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remarks\": \"Attempting second approval on Level 1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transaction/commission-payments/{{paymentId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["transaction", "commission-payments", "{{paymentId}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Step 7: Approve Level 2 by finance_head",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Status is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Level 2 approved; moves to Level 3', function () {",
+                  "    pm.expect(jsonData.data.status).to.eql('PENDING_APPROVAL');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_l2_a}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remarks\": \"Finance verified against invoice and tax accounts.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transaction/commission-payments/{{paymentId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["transaction", "commission-payments", "{{paymentId}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Step 8: Approve Level 3 by director_priya (Final Level)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Status is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Voucher status transitions to APPROVED', function () {",
+                  "    pm.expect(jsonData.data.status).to.eql('APPROVED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_l3_a}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remarks\": \"Executive Director sign-off approved.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transaction/commission-payments/{{paymentId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["transaction", "commission-payments", "{{paymentId}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Step 9: Disburse & Post Payment (Financial Posting)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Status is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Voucher status is PAID', function () {",
+                  "    pm.expect(jsonData.data.status).to.eql('PAID');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_l2_a}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaction/commission-payments/{{paymentId}}/pay",
+              "host": ["{{baseUrl}}"],
+              "path": ["transaction", "commission-payments", "{{paymentId}}", "pay"]
+            }
+          }
+        },
+        {
+          "name": "Step 10: Fetch Voucher & Approval Audit Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Status is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Audit history contains all sequential actions', function () {",
+                  "    pm.expect(jsonData.data.history.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_submitter}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaction/commission-payments/{{paymentId}}/approval",
+              "host": ["{{baseUrl}}"],
+              "path": ["transaction", "commission-payments", "{{paymentId}}", "approval"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Rejection and Resubmission Flow",
+      "item": [
+        {
+          "name": "Rejection - Step 1: Reject Voucher with Mandatory Reason",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_l1_a}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Discrepancy in attached bill deduction. Please review wagon deduction.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transaction/commission-payments/{{paymentId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["transaction", "commission-payments", "{{paymentId}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Rejection - Step 2: Resubmit Voucher after Correction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_submitter}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remarks\": \"Corrected wagon weight calculation per Manager feedback.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transaction/commission-payments/{{paymentId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["transaction", "commission-payments", "{{paymentId}}", "submit"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -33,7 +33,6 @@ public class PaymentTypeServiceImpl implements PaymentTypeService {
         }
 
         PaymentTypeEntity entity = paymentTypeMapper.toEntity(request);
-        entity.setAppStatus(StatusEnum.A.name()); // default to active
         PaymentTypeEntity saved = paymentTypeRepository.save(entity);
         return paymentTypeMapper.toResponse(saved);
     }
@@ -86,7 +85,6 @@ public class PaymentTypeServiceImpl implements PaymentTypeService {
     @Transactional(readOnly = true)
     public List<DropdownDTO> getDropdown() {
         return paymentTypeRepository.findAll().stream()
-                .filter(pt -> StatusEnum.A.name().equals(pt.getAppStatus()))
                 .map(pt -> DropdownDTO.builder()
                         .value(pt.getId())
                         .label("[" + pt.getCode() + "] " + pt.getName())

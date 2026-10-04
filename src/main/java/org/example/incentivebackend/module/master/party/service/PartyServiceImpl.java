@@ -27,6 +27,8 @@ public class PartyServiceImpl implements PartyService {
     private final PartyRepository partyRepository;
     private final BusinessHeadRepository businessHeadRepository;
     private final PartyMapper partyMapper;
+    private final org.example.incentivebackend.common.audit.service.AuditLogService auditLogService;
+    private final org.example.incentivebackend.common.audit.util.AuditHelper auditHelper;
 
     @Override
     public PartyResponse create(PartyRequest request) {
@@ -42,7 +44,17 @@ public class PartyServiceImpl implements PartyService {
         }
 
         PartyEntity saved = partyRepository.save(entity);
-        return partyMapper.toResponse(saved);
+        PartyResponse response = partyMapper.toResponse(saved);
+        
+        auditLogService.createAuditLog(
+            "MASTER", "Party", "mm_party", saved.getId(),
+            org.example.incentivebackend.common.audit.enums.AuditAction.CREATE,
+            null, auditHelper.toJson(response),
+            "Party created", 1L, // Hardcoded 1L for now, replace with actual user ID
+            null, null, null, null, "SUCCESS"
+        );
+        
+        return response;
     }
 
     @Override
@@ -54,6 +66,8 @@ public class PartyServiceImpl implements PartyService {
             throw new DuplicateResourceException("Another party already exists with name: " + request.getPartyName());
         }
 
+        String oldStateJson = auditHelper.toJson(partyMapper.toResponse(entity));
+        
         partyMapper.updateEntity(request, entity);
         if (request.getBusinessHeadId() != null) {
             BusinessHeadEntity businessHead = businessHeadRepository.findById(request.getBusinessHeadId())
@@ -64,7 +78,17 @@ public class PartyServiceImpl implements PartyService {
         }
 
         PartyEntity updated = partyRepository.save(entity);
-        return partyMapper.toResponse(updated);
+        PartyResponse response = partyMapper.toResponse(updated);
+        
+        auditLogService.createAuditLog(
+            "MASTER", "Party", "mm_party", updated.getId(),
+            org.example.incentivebackend.common.audit.enums.AuditAction.UPDATE,
+            oldStateJson, auditHelper.toJson(response),
+            "Party updated", 1L,
+            null, null, null, null, "SUCCESS"
+        );
+        
+        return response;
     }
 
     @Override
@@ -99,6 +123,16 @@ public class PartyServiceImpl implements PartyService {
     public void delete(Long id) {
         PartyEntity entity = partyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Party not found with id: " + id));
+                
+        String oldStateJson = auditHelper.toJson(partyMapper.toResponse(entity));
         partyRepository.delete(entity);
+        
+        auditLogService.createAuditLog(
+            "MASTER", "Party", "mm_party", id,
+            org.example.incentivebackend.common.audit.enums.AuditAction.DELETE,
+            oldStateJson, null,
+            "Party deleted", 1L,
+            null, null, null, null, "SUCCESS"
+        );
     }
 }

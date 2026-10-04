@@ -13,4 +13,8 @@ public class DesignationPermissionRequestDTO {
     private Boolean canEdit;
     private Boolean canDelete;
     private Boolean canExport;
+    private Boolean canSubmit;
+    private Boolean canApprove;
+    private Boolean canReject;
 }
+

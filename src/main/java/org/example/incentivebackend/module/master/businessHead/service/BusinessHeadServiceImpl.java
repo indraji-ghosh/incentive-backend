@@ -135,11 +135,6 @@ public class BusinessHeadServiceImpl implements BusinessHeadService {
                 .headStatus(entity.getHeadStatus())
                 .createdAt(entity.getCreatedAt())
                 .createdBy(entity.getCreatedBy())
-                .modAt(entity.getModAt())
-                .modBy(entity.getModBy())
-                .appStatus(entity.getAppStatus())
-                .appBy(entity.getAppBy())
-                .appAt(entity.getAppAt())
                 .build();
     }
 }

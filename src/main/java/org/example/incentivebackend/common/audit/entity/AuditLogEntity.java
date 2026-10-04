@@ -78,19 +78,61 @@ public class AuditLogEntity {
     private Long entityId;
 
     /**
-     * CREATE -> Full object
-     * UPDATE -> Changed fields only
-     * DELETE -> Deleted object / previous values
+     * State before the action.
      */
     @Lob
-    @Column(name = "data", nullable = false)
+    @Column(name = "old_values")
+    private String oldValues;
+
+    /**
+     * State after the action.
+     */
+    @Lob
+    @Column(name = "new_values")
+    private String newValues;
+
+    /**
+     * Legacy data field (Required by existing DB schema).
+     */
+    @Lob
+    @Column(name = "data")
     private String data;
 
     /**
-     * CREATE / UPDATE / DELETE
+     * Reference to the business context (e.g. Bill No, RR No).
+     */
+    @Column(name = "business_reference", length = 100)
+    private String businessReference;
+
+    /**
+     * The module that triggered this action if cross-module.
+     */
+    @Column(name = "source_module", length = 100)
+    private String sourceModule;
+
+    /**
+     * Entity type that triggered this action.
+     */
+    @Column(name = "source_entity_type", length = 100)
+    private String sourceEntityType;
+
+    /**
+     * Entity ID that triggered this action.
+     */
+    @Column(name = "source_entity_id")
+    private Long sourceEntityId;
+
+    /**
+     * Status of the operation (e.g. SUCCESS, FAILURE).
+     */
+    @Column(name = "status", length = 50)
+    private String status;
+
+    /**
+     * The specific action taken.
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "action", nullable = false, length = 20)
+    @Column(name = "action", nullable = false, length = 30)
     private AuditAction action;
 
     /**
